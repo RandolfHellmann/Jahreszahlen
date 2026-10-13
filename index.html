@@ -117,6 +117,8 @@
   form { display: flex; gap: 10px; }
   .fields { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
   .dash { color: var(--muted); font-size: 1.4em; font-weight: 600; }
+  /* Zweites Feld nur bei Zeiträumen (z. B. Wiener Kongress) */
+  .fields.single .dash, .fields.single #answer2 { display: none; }
   input {
     flex: 1;
     min-width: 0;
@@ -520,7 +522,8 @@
       ? "Davor: " + esc(EVENTS[i - 1].name) + " · <b>" + EVENTS[i - 1].display + "</b>"
       : "Das erste Ereignis auf dem Zeitstrahl";
     setReadOnly(false);
-    input.placeholder = "Jahr";
+    $("fields").classList.toggle("single", ev.end === ev.start);
+    input.placeholder = ev.end === ev.start ? "Jahr" : "von";
     input2.placeholder = "bis";
     input.value = "";
     input2.value = "";
@@ -633,7 +636,7 @@
   // Nur Ziffern; nach 4 Ziffern springt der Cursor ins zweite Feld
   input.addEventListener("input", () => {
     input.value = input.value.replace(/\D/g, "").slice(0, 4);
-    if (input.value.length === 4 && !input.readOnly) input2.focus();
+    if (input.value.length === 4 && !input.readOnly && !$("fields").classList.contains("single")) input2.focus();
   });
   input2.addEventListener("input", () => {
     input2.value = input2.value.replace(/\D/g, "").slice(0, 4);
