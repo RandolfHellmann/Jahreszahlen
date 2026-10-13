@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Jahreszahlen-Trainer</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --line: #d2d2d7;
+    --accent: #4f46e5;
+    --accent-soft: #eef0ff;
+    --ok: #15803d;
+    --ok-soft: #e3f6e8;
+    --bad: #c62828;
+    --bad-soft: #fdecec;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+    --rounded: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f0f12;
+      --card: #1c1c21;
+      --text: #f5f5f7;
+      --muted: #9a9aa3;
+      --line: #3a3a42;
+      --accent: #9192ff;
+      --accent-soft: #24244a;
+      --ok: #4ade80;
+      --ok-soft: #13301f;
+      --bad: #ff7b7b;
+      --bad-soft: #3a1c1c;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1.4;
+    padding: 24px 16px 48px;
+    -webkit-text-size-adjust: 100%;
+  }
+  .app {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: grid;
+    gap: 28px;
+  }
+  header h1 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+
+  /* ---------- Abfrage-Karte ---------- */
+  .panel {
+    position: sticky;
+    top: 12px;
+    z-index: 5;
+    align-self: start;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 22px;
+    padding: 26px 24px;
+    box-shadow: var(--shadow);
+  }
+  .progress {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 0.8em;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .bar {
+    height: 6px;
+    background: var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 22px;
+  }
+  .bar > div {
+    height: 100%;
+    background: var(--accent);
+    width: 0;
+    border-radius: 3px;
+    transition: width .35s ease;
+  }
+  .label { color: var(--muted); font-size: 0.8em; margin-bottom: 2px; }
+  .event {
+    font-size: 1.6em;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+  }
+  .prev {
+    color: var(--muted);
+    font-size: 0.85em;
+    margin-bottom: 20px;
+    min-height: 1.4em;
+  }
+  .prev b { color: var(--text); font-family: var(--rounded); font-variant-numeric: tabular-nums; }
+  form { display: flex; gap: 10px; }
+  input {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    font-family: var(--rounded);
+    font-size: 1.5em;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    padding: 10px 16px;
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input:focus { outline: none; border-color: var(--accent); }
+  button {
+    font: inherit;
+    font-weight: 600;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 14px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    -webkit-appearance: none;
+    touch-action: manipulation;
+  }
+  @media (prefers-color-scheme: dark) { button { color: #111; } }
+  button.secondary { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+  .feedback {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    display: none;
+  }
+  .feedback.ok { display: block; background: var(--ok-soft); color: var(--ok); }
+  .feedback.bad { display: block; background: var(--bad-soft); color: var(--bad); }
+  .feedback .main { font-weight: 600; }
+  .feedback .main b { font-family: var(--rounded); font-size: 1.15em; }
+  .feedback .rel { color: var(--text); opacity: .75; font-size: 0.85em; margin-top: 2px; }
+  input.shake { animation: shake .35s; border-color: var(--bad); }
+  @keyframes shake {
+    0%, 100% { transform: none; }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  .feedback .fix { color: var(--text); font-size: 0.85em; margin-top: 8px; font-weight: 600; }
+  .feedback .fix.done { color: var(--ok); }
+  .hint { color: var(--muted); font-size: 0.75em; margin: 12px 0 0; text-align: center; }
+
+  .score {
+    font-family: var(--rounded);
+    font-size: 3.2em;
+    font-weight: 800;
+    text-align: center;
+    margin: 4px 0 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .score-sub { text-align: center; color: var(--muted); margin-bottom: 22px; }
+  .actions { display: flex; flex-direction: column; gap: 10px; }
+  .actions button { width: 100%; padding: 15px; }
+  .hidden { display: none !important; }
+
+  /* ---------- Zeitstrahl ---------- */
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+    --yearw: 5.2em;
+    --railw: 36px;
+  }
+  .timeline li {
+    display: grid;
+    grid-template-columns: var(--yearw) var(--railw) 1fr;
+    column-gap: 10px;
+  }
+  .rail { position: relative; align-self: stretch; }
+  .rail::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    transform: translateX(-50%);
+    background: var(--line);
+  }
+  .node:first-child .rail::before { top: 50%; }
+  .node:last-child .rail::before { bottom: 50%; }
+
+  .node { min-height: 64px; align-items: center; }
+  .year {
+    font-family: var(--rounded);
+    font-size: 1.5em;
+    font-weight: 700;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    transition: color .3s;
+  }
+  .year.long { font-size: 1.15em; }
+  .dot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--card);
+    border: 3px solid var(--line);
+    transition: all .3s;
+  }
+  .info {
+    padding: 10px 14px;
+    border-radius: 14px;
+    transition: background .3s;
+  }
+  .title { font-weight: 600; font-size: 1.05em; line-height: 1.25; }
+  .meta { font-size: 0.75em; color: var(--muted); margin-top: 2px; }
+  .meta s { opacity: .8; }
+
+  .node.pending .year { color: var(--line); }
+  .node.pending .title { color: var(--muted); font-weight: 500; }
+
+  .node.current .year { color: var(--accent); }
+  .node.current .dot {
+    width: 22px; height: 22px;
+    border-color: var(--accent);
+    background: var(--accent);
+    box-shadow: 0 0 0 6px var(--accent-soft);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  .node.current .info { background: var(--accent-soft); }
+  .node.current .meta { color: var(--accent); font-weight: 600; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 6px var(--accent-soft); }
+    50% { box-shadow: 0 0 0 11px var(--accent-soft); }
+  }
+
+  .node.known .dot { border-color: var(--accent); background: var(--accent); }
+  .node.ok .year { color: var(--ok); }
+  .node.ok .dot { border-color: var(--ok); background: var(--ok); }
+  .node.bad .year { color: var(--bad); }
+  .node.bad .dot { border-color: var(--bad); background: var(--bad); }
+  .node.bad .meta { color: var(--bad); }
+
+  .gap {
+    height: var(--h, 34px);
+    transition: height .6s cubic-bezier(.2,.8,.2,1);
+    align-items: center;
+  }
+  .gap .rail::before {
+    background: repeating-linear-gradient(to bottom, var(--line) 0 4px, transparent 4px 9px);
+  }
+  .gap.revealed .rail::before { background: var(--accent); opacity: .45; }
+  .gap .rail::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid var(--line);
+  }
+  .gap.revealed .rail::after { border-top-color: var(--accent); }
+  .pill {
+    display: inline-block;
+    font-size: 0.8em;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 999px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity .4s .15s, transform .4s .15s;
+    font-variant-numeric: tabular-nums;
+    margin-left: 14px;
+  }
+  .gap.revealed .pill { opacity: 1; transform: none; }
+
+  /* ---------- Layout ---------- */
+  @media (min-width: 900px) {
+    .app { grid-template-columns: minmax(360px, 420px) 1fr; align-items: start; gap: 48px; }
+    .panel { top: 24px; }
+    .timeline { padding-top: 34px; }
+  }
+  @media (max-width: 899px) {
+    .panel { margin: 0 -4px; }
+    .card { padding: 20px 18px; }
+    .event { font-size: 1.4em; }
+  }
+  @media (max-width: 480px) {
+    body { font-size: 17px; }
+    .timeline { --yearw: 4.6em; --railw: 28px; }
+    .timeline li { column-gap: 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="panel" id="panel">
+    <header><h1>Jahreszahlen · Vormärz</h1></header>
+
+    <!-- Abfrage -->
+    <section id="quiz" class="card">
+      <div class="progress">
+        <span id="roundLabel">Runde 1</span>
+        <span id="countLabel">1 / 8</span>
+      </div>
+      <div class="bar"><div id="barFill"></div></div>
+
+      <div class="label">In welchem Jahr?</div>
+      <p class="event" id="eventText"></p>
+      <div class="prev" id="prevText"></div>
+
+      <form id="answerForm" autocomplete="off">
+        <input id="answer" type="text" inputmode="numeric" enterkeyhint="go"
+               placeholder="Jahr" aria-label="Jahreszahl" autocorrect="off" spellcheck="false">
+        <button type="submit" id="submitBtn">Prüfen</button>
+      </form>
+
+      <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+      <p class="hint" id="hint">Mit Enter bestätigen</p>
+    </section>
+
+    <!-- Rundenergebnis -->
+    <section id="result" class="card hidden">
+      <div class="label" id="resultRound" style="text-align:center"></div>
+      <div class="score" id="scoreText"></div>
+      <div class="score-sub" id="scoreSub"></div>
+      <div class="actions">
+        <button id="nextRoundBtn"></button>
+        <button id="restartBtn" class="secondary">Neu starten mit allen Ereignissen</button>
+      </div>
+    </section>
+  </div>
+
+  <ol class="timeline" id="timeline" aria-label="Zeitstrahl"></ol>
+</div>
+
+<script>
+  // Chronologisch sortiert. start/end: für die Abstände im Zeitstrahl,
+  // display: angezeigte Lösung, accept: akzeptierte Antworten
+  const EVENTS = [
+    { name: "Völkerschlacht bei Leipzig",    start: 1813, end: 1813, display: "1813",    accept: ["1813"] },
+    { name: "Wiener Kongress",               start: 1814, end: 1815, display: "1814/15", accept: ["1814", "1815", "1814/15", "1814-15", "1814/1815", "1814-1815"] },
+    { name: "Deutsche Bundesakte",           start: 1815, end: 1815, display: "1815",    accept: ["1815"] },
+    { name: "Wartburgfest",                  start: 1817, end: 1817, display: "1817",    accept: ["1817"] },
+    { name: "Ermordung Kotzebues",           start: 1819, end: 1819, display: "1819",    accept: ["1819"] },
+    { name: "Karlsbader Beschlüsse",         start: 1819, end: 1819, display: "1819",    accept: ["1819"] },
+    { name: "Julirevolution in Frankreich",  start: 1830, end: 1830, display: "1830",    accept: ["1830"] },
+    { name: "Hambacher Fest",                start: 1832, end: 1832, display: "1832",    accept: ["1832"] },
+  ];
+  const ALL = EVENTS.map((_, i) => i);
+
+  const $ = (id) => document.getElementById(id);
+  const input = $("answer");
+  const feedback = $("feedback");
+
+  let round = 0;
+  let queue = [];          // Indizes der Ereignisse dieser Runde
+  let inRound = new Set();
+  let pos = 0;
+  let correct = 0;
+  let wrong = [];
+  let results = {};        // index -> { status: "ok"|"bad", given }
+  let phase = "ask";       // "ask" → bei falscher Antwort "fix" (richtiges Jahr eintippen) → "done"
+  let finished = false;
+
+  const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const normalize = (s) => s.trim().replace(/[–—]/g, "-").replace(/\s+/g, "");
+
+  function gapYears(i) { return EVENTS[i + 1].start - EVENTS[i].end; }
+  function gapText(d) { return d === 0 ? "im selben Jahr" : d === 1 ? "1 Jahr später" : d + " Jahre später"; }
+
+  function status(i) {
+    if (results[i]) return results[i].status;
+    if (!inRound.has(i)) return "known";
+    if (!finished && i === queue[pos]) return "current";
+    return "pending";
+  }
+  const isRevealed = (i) => ["ok", "bad", "known"].includes(status(i));
+
+  // ---------- Zeitstrahl ----------
+  function buildTimeline() {
+    const ol = $("timeline");
+    ol.innerHTML = "";
+    EVENTS.forEach((ev, i) => {
+      const li = document.createElement("li");
+      li.className = "node";
+      li.id = "node-" + i;
+      li.innerHTML =
+        '<div class="year' + (ev.display.length > 4 ? " long" : "") + '"></div>' +
+        '<div class="rail"><span class="dot"></span></div>' +
+        '<div class="info"><div class="title"></div><div class="meta"></div></div>';
+      li.querySelector(".title").textContent = ev.name;
+      ol.appendChild(li);
+
+      if (i < EVENTS.length - 1) {
+        const gap = document.createElement("li");
+        gap.className = "gap";
+        gap.id = "gap-" + i;
+        gap.setAttribute("aria-hidden", "true");
+        gap.innerHTML = '<div></div><div class="rail"></div><div><span class="pill"></span></div>';
+        gap.querySelector(".pill").textContent = "↓ " + gapText(gapYears(i));
+        ol.appendChild(gap);
+      }
+    });
+  }
+
+  function renderTimeline() {
+    EVENTS.forEach((ev, i) => {
+      const s = status(i);
+      const node = $("node-" + i);
+      node.className = "node " + s;
+      node.querySelector(".year").textContent = (s === "pending" || s === "current") ? "?" : ev.display;
+      const meta = node.querySelector(".meta");
+      if (s === "current") meta.textContent = "Jetzt gefragt";
+      else if (s === "ok") meta.textContent = "✓ richtig";
+      else if (s === "bad") meta.innerHTML = "✗ deine Antwort: <s>" + esc(results[i].given) + "</s>";
+      else meta.textContent = "";
+
+      if (i < EVENTS.length - 1) {
+        const gap = $("gap-" + i);
+        const open = isRevealed(i) && isRevealed(i + 1);
+        gap.classList.toggle("revealed", open);
+        // Abstand wächst proportional zu den Jahren dazwischen
+        gap.style.setProperty("--h", open ? (40 + gapYears(i) * 14) + "px" : "34px");
+      }
+    });
+  }
+
+  function scrollToNode(i) {
+    const node = $("node-" + i);
+    if (!node) return;
+    const narrow = window.matchMedia("(max-width: 899px)").matches;
+    const offset = narrow ? $("panel").offsetHeight + 110 : 140;
+    node.style.scrollMarginTop = offset + "px";
+    node.style.scrollMarginBottom = "120px";
+    node.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  // ---------- Ablauf ----------
+  function startRound(indices) {
+    round++;
+    queue = indices.slice(); // chronologische Reihenfolge
+    inRound = new Set(queue);
+    pos = 0;
+    correct = 0;
+    wrong = [];
+    results = {};
+    finished = false;
+    $("result").classList.add("hidden");
+    $("quiz").classList.remove("hidden");
+    showQuestion();
+  }
+
+  function showQuestion() {
+    phase = "ask";
+    const i = queue[pos];
+    const ev = EVENTS[i];
+    $("roundLabel").textContent = "Runde " + round;
+    $("countLabel").textContent = (pos + 1) + " / " + queue.length;
+    $("barFill").style.width = (pos / queue.length * 100) + "%";
+    $("eventText").textContent = ev.name;
+    $("prevText").innerHTML = i > 0
+      ? "Davor: " + esc(EVENTS[i - 1].name) + " · <b>" + EVENTS[i - 1].display + "</b>"
+      : "Das erste Ereignis auf dem Zeitstrahl";
+    input.value = "";
+    input.readOnly = false;
+    input.placeholder = "Jahr";
+    feedback.className = "feedback";
+    feedback.innerHTML = "";
+    $("submitBtn").textContent = "Prüfen";
+    $("hint").textContent = "Mit Enter bestätigen";
+    renderTimeline();
+    scrollToNode(i);
+    input.focus();
+  }
+
+  function check() {
+    const value = normalize(input.value);
+    if (!value) { input.focus(); return; }
+    const i = queue[pos];
+    const ev = EVENTS[i];
+    const ok = ev.accept.includes(value);
+    results[i] = { status: ok ? "ok" : "bad", given: input.value.trim() };
+    if (ok) correct++; else wrong.push(i);
+
+    let rel = "";
+    if (i > 0) {
+      const d = gapYears(i - 1);
+      const prevName = "„" + esc(EVENTS[i - 1].name) + "“";
+      rel = d === 0 ? "Im selben Jahr wie " + prevName
+          : (d === 1 ? "1 Jahr" : d + " Jahre") + " nach " + prevName;
+    }
+    feedback.className = "feedback " + (ok ? "ok" : "bad");
+    feedback.innerHTML =
+      '<div class="main">' + (ok ? "✓ Richtig! " : "✗ Leider falsch. Richtig ist ") + "<b>" + ev.display + "</b></div>" +
+      (rel ? '<div class="rel">' + rel + "</div>" : "") +
+      (ok ? "" : '<div class="fix" id="fixText">Tippe jetzt die richtige Jahreszahl ein, um weiterzumachen.</div>');
+
+    $("barFill").style.width = ((pos + 1) / queue.length * 100) + "%";
+    renderTimeline();
+
+    if (ok) {
+      finishQuestion();
+    } else {
+      // Erst weiter, wenn die richtige Jahreszahl einmal selbst eingetippt wurde
+      phase = "fix";
+      input.value = "";
+      input.placeholder = ev.display;
+      $("submitBtn").textContent = "Bestätigen";
+      $("hint").textContent = "Richtige Jahreszahl eintippen und mit Enter bestätigen";
+      input.focus();
+    }
+  }
+
+  function checkFix() {
+    const ev = EVENTS[queue[pos]];
+    if (!ev.accept.includes(normalize(input.value))) {
+      input.classList.remove("shake");
+      void input.offsetWidth; // Animation neu starten
+      input.classList.add("shake");
+      input.select();
+      return;
+    }
+    const fix = $("fixText");
+    fix.textContent = "✓ " + ev.name + " – " + ev.display + ". Gemerkt!";
+    fix.classList.add("done");
+    finishQuestion();
+  }
+
+  function finishQuestion() {
+    phase = "done";
+    input.readOnly = true;
+    $("submitBtn").textContent = pos + 1 < queue.length ? "Weiter" : "Ergebnis";
+    $("hint").textContent = "Enter für weiter";
+  }
+
+  function next() {
+    pos++;
+    if (pos < queue.length) showQuestion();
+    else showResult();
+  }
+
+  function showResult() {
+    finished = true;
+    renderTimeline();
+    $("quiz").classList.add("hidden");
+    $("result").classList.remove("hidden");
+    $("resultRound").textContent = "Ergebnis Runde " + round;
+    $("scoreText").textContent = correct + " / " + queue.length;
+    $("scoreSub").textContent = wrong.length === 0
+      ? "Alles richtig – sehr gut!"
+      : "Die rot markierten Ereignisse kommen in der nächsten Runde wieder.";
+
+    const btn = $("nextRoundBtn");
+    btn.textContent = wrong.length === 0
+      ? "Nochmal alle üben"
+      : "Nächste Runde (" + wrong.length + " " + (wrong.length === 1 ? "Ereignis" : "Ereignisse") + ")";
+    $("restartBtn").classList.toggle("hidden", wrong.length === 0);
+    btn.focus();
+  }
+
+  $("answerForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (phase === "ask") check();
+    else if (phase === "fix") checkFix();
+    else next();
+  });
+
+  input.addEventListener("animationend", () => input.classList.remove("shake"));
+
+  $("nextRoundBtn").addEventListener("click", () => {
+    startRound(wrong.length ? wrong : ALL);
+  });
+
+  $("restartBtn").addEventListener("click", () => {
+    round = 0;
+    startRound(ALL);
+  });
+
+  buildTimeline();
+  startRound(ALL);
+</script>
+</body>
+</html>
