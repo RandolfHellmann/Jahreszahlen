@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Jahreszahlen">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f0f12" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACJ0lEQVR42u3cQQrCMBBA0Z7OrZcueBIv4WZ0pYIi1samk3nhn6B5FEomnY6Hs/S2ySMQHIJDcAgOwSE4BIfgEByCQ4JDcAgOwSE4BIfgEByCQ3BIcAgOwSE4BIfgEByCQ3AIDgkOwSE4VB1HRNg5OB4aPi8bWRRHfLfsZS0csXzZ0RI44tdlUwfHEeuWfYWjJY7TfElaLRzRYsExII5ot+CAAw444IADDjjggKOfjKU+4PDmgAMOOOCAAw444IADDmcrcDiyd2QPBxwmweAwQyrT53JvRVVuvN0/3m4a/v0Vp6w4NvjEFxyCQ3AIDjjggAMOOOCAAw444IADDjjggENwCA7BAQcc5jngMAkGhxlSOEyfw+HeChx5ZPABR3scsYMFx0b7BMeAOHo9azjggAMOOOCAAw444Oj6B2M4vDnggAMOOOCAAw444IDD2Qocjuwd2cMBh0kwOMyQyvS53FuRG2+Cw11ZOOCAAw444IADDjjggAMOwSE4BIfggAMOOOCAAw444IADDvMccJgEg8MMqUyfy70VjYzDjTc4doTj9Ts5S7VwdLmxDkcCHL3+aAAHHHDAAQcccMABBxxd/2AMhzcHHHDAAQcccMABBxxwOFuBw5G9I3s44DAJBocZUpk+l3srqnLj7dmKnYNDcAgOwSE4BIfgkOAQHIJDcAgOwSE4BIfgEBwSHIJDcAgOwSE4BIfgEByCQ4JDcAgOwSE4BIfgULKuo2PSQ0Q5HWEAAAAASUVORK5CYII=">
 <title>Jahreszahlen-Trainer</title>
 <style>
   :root {
@@ -45,8 +50,10 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     font-size: 20px;
     line-height: 1.4;
-    padding: 24px 16px 48px;
+    padding: calc(24px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right))
+             calc(48px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
     -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
   .app {
     max-width: 1080px;
@@ -66,10 +73,12 @@
 
   /* ---------- Abfrage-Karte ---------- */
   .panel {
-    position: sticky;
-    top: 12px;
+    position: relative;
     z-index: 5;
     align-self: start;
+  }
+  @media (min-width: 600px) and (min-height: 700px) {
+    .panel { position: sticky; top: 12px; }
   }
   .card {
     background: var(--card);
@@ -137,6 +146,7 @@
     appearance: none;
   }
   input:focus { outline: none; border-color: var(--accent); }
+  input, button { touch-action: manipulation; }
   button {
     font: inherit;
     font-weight: 600;
@@ -171,7 +181,6 @@
   }
   .feedback .fix { color: var(--text); font-size: 0.85em; margin-top: 8px; font-weight: 600; }
   .feedback .fix.done { color: var(--ok); }
-  .hint { color: var(--muted); font-size: 0.75em; margin: 12px 0 0; text-align: center; }
 
   .score {
     font-family: var(--rounded);
@@ -307,21 +316,46 @@
   }
   .gap.revealed .pill { opacity: 1; transform: none; }
 
+  .tl-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 4px;
+  }
+
   /* ---------- Layout ---------- */
   @media (min-width: 900px) {
     .app { grid-template-columns: minmax(360px, 420px) 1fr; align-items: start; gap: 48px; }
     .panel { top: 24px; }
     .timeline { padding-top: 34px; }
+    .tl-title { display: none; }
   }
   @media (max-width: 899px) {
     .panel { margin: 0 -4px; }
     .card { padding: 20px 18px; }
     .event { font-size: 1.4em; }
   }
-  @media (max-width: 480px) {
-    body { font-size: 17px; }
-    form { flex-wrap: wrap; }
-    form button { width: 100%; }
+  @media (max-width: 599px) {
+    body { font-size: 17px; padding-top: calc(12px + env(safe-area-inset-top)); }
+    .app { gap: 20px; }
+    header h1 { font-size: 0.72rem; margin-bottom: 8px; }
+    .panel { margin: 0; }
+    .card { padding: 16px; border-radius: 18px; }
+    .progress { font-size: 0.75em; margin-bottom: 6px; }
+    .bar { height: 5px; margin-bottom: 14px; }
+    .label { font-size: 0.75em; }
+    .event { font-size: 1.35em; margin-bottom: 4px; }
+    .prev { font-size: 0.8em; margin-bottom: 12px; }
+    input { font-size: 1.4em; padding: 8px; border-radius: 12px; }
+    form { flex-wrap: wrap; gap: 8px; }
+    form button { width: 100%; padding: 13px; border-radius: 12px; }
+    .feedback { margin-top: 10px; padding: 10px 12px; border-radius: 12px; font-size: 0.95em; }
+    .feedback .fix { margin-top: 4px; }
+    .score { font-size: 2.6em; }
+    .score-sub { margin-bottom: 16px; font-size: 0.9em; }
+    .actions button { padding: 13px; }
     .timeline { --yearw: 4.6em; --railw: 28px; }
     .timeline li { column-gap: 6px; }
   }
@@ -356,7 +390,6 @@
       </form>
 
       <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
-      <p class="hint" id="hint">Mit Enter bestätigen</p>
     </section>
 
     <!-- Rundenergebnis -->
@@ -371,7 +404,10 @@
     </section>
   </div>
 
-  <ol class="timeline" id="timeline" aria-label="Zeitstrahl"></ol>
+  <section class="tl-wrap">
+    <h2 class="tl-title">Zeitstrahl</h2>
+    <ol class="timeline" id="timeline" aria-label="Zeitstrahl"></ol>
+  </section>
 </div>
 
 <script>
@@ -401,6 +437,7 @@
   let correct = 0;
   let wrong = [];
   let results = {};        // index -> { status: "ok"|"bad", given }
+  let locked = ["", ""];    // angezeigte Antwort nach dem Prüfen
   let phase = "ask";       // "ask" → bei falscher Antwort "fix" (richtiges Jahr eintippen) → "done"
   let finished = false;
 
@@ -420,10 +457,7 @@
     input2.value = "";
     input.focus();
   }
-  function setReadOnly(on) {
-    input.readOnly = on;
-    input2.readOnly = on;
-  }
+
 
   function gapYears(i) { return EVENTS[i + 1].start - EVENTS[i].end; }
   function gapText(d) { return d === 0 ? "im selben Jahr" : d === 1 ? "1 Jahr später" : d + " Jahre später"; }
@@ -488,6 +522,8 @@
   function scrollToNode(i) {
     const node = $("node-" + i);
     if (!node) return;
+    // Auf dem Handy bleibt die Abfrage oben im Blick; der Zeitstrahl wird nicht hergescrollt
+    if (getComputedStyle($("panel")).position !== "sticky") return;
     const narrow = window.matchMedia("(max-width: 899px)").matches;
     const offset = narrow ? $("panel").offsetHeight + 110 : 140;
     node.style.scrollMarginTop = offset + "px";
@@ -521,7 +557,6 @@
     $("prevText").innerHTML = i > 0
       ? "Davor: " + esc(EVENTS[i - 1].name) + " · <b>" + EVENTS[i - 1].display + "</b>"
       : "Das erste Ereignis auf dem Zeitstrahl";
-    setReadOnly(false);
     $("fields").classList.toggle("single", ev.end === ev.start);
     input.placeholder = ev.end === ev.start ? "Jahr" : "von";
     input2.placeholder = "bis";
@@ -530,7 +565,6 @@
     feedback.className = "feedback";
     feedback.innerHTML = "";
     $("submitBtn").textContent = "Prüfen";
-    $("hint").textContent = "Mit Enter bestätigen";
     renderTimeline();
     scrollToNode(i);
     input.focus();
@@ -556,7 +590,7 @@
     feedback.innerHTML =
       '<div class="main">' + (ok ? "✓ Richtig! " : "✗ Leider falsch. Richtig ist ") + "<b>" + ev.display + "</b></div>" +
       (rel ? '<div class="rel">' + rel + "</div>" : "") +
-      (ok ? "" : '<div class="fix" id="fixText">Tippe jetzt die richtige Jahreszahl ein, um weiterzumachen.</div>');
+      (ok ? "" : '<div class="fix" id="fixText">Tippe die richtige Jahreszahl ein, um weiterzumachen.</div>');
 
     $("barFill").style.width = ((pos + 1) / queue.length * 100) + "%";
     renderTimeline();
@@ -571,7 +605,6 @@
       input.value = "";
       input2.value = "";
       $("submitBtn").textContent = "Bestätigen";
-      $("hint").textContent = "Richtige Jahreszahl eintippen und mit Enter bestätigen";
       input.focus();
     }
   }
@@ -594,9 +627,8 @@
 
   function finishQuestion() {
     phase = "done";
-    setReadOnly(true);
+    locked = [input.value, input2.value];
     $("submitBtn").textContent = pos + 1 < queue.length ? "Weiter" : "Ergebnis";
-    $("hint").textContent = "Enter für weiter";
   }
 
   function next() {
@@ -610,6 +642,7 @@
     renderTimeline();
     $("quiz").classList.add("hidden");
     $("result").classList.remove("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
     $("resultRound").textContent = "Ergebnis Runde " + round;
     $("scoreText").textContent = correct + " / " + queue.length;
     $("scoreSub").textContent = wrong.length === 0
@@ -631,19 +664,23 @@
     else next();
   });
 
+  $("submitBtn").addEventListener("mousedown", (e) => e.preventDefault());
+
   $("fields").addEventListener("animationend", () => $("fields").classList.remove("shake"));
 
   // Nur Ziffern; nach 4 Ziffern springt der Cursor ins zweite Feld
   input.addEventListener("input", () => {
+    if (phase === "done") { input.value = locked[0]; return; }
     input.value = input.value.replace(/\D/g, "").slice(0, 4);
-    if (input.value.length === 4 && !input.readOnly && !$("fields").classList.contains("single")) input2.focus();
+    if (input.value.length === 4 && !$("fields").classList.contains("single")) input2.focus();
   });
   input2.addEventListener("input", () => {
+    if (phase === "done") { input2.value = locked[1]; return; }
     input2.value = input2.value.replace(/\D/g, "").slice(0, 4);
   });
   // Rücktaste im leeren zweiten Feld springt zurück ins erste
   input2.addEventListener("keydown", (e) => {
-    if (e.key === "Backspace" && input2.value === "" && !input2.readOnly) {
+    if (e.key === "Backspace" && input2.value === "" && phase !== "done") {
       e.preventDefault();
       input.focus();
       input.value = input.value.slice(0, -1);
