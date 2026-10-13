@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Jahreszahlen">
+<meta name="apple-mobile-web-app-title" content="Vormärz">
 <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f0f12" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACJ0lEQVR42u3cQQrCMBBA0Z7OrZcueBIv4WZ0pYIi1samk3nhn6B5FEomnY6Hs/S2ySMQHIJDcAgOwSE4BIfgEByCQ4JDcAgOwSE4BIfgEByCQ3BIcAgOwSE4BIfgEByCQ3AIDgkOwSE4VB1HRNg5OB4aPi8bWRRHfLfsZS0csXzZ0RI44tdlUwfHEeuWfYWjJY7TfElaLRzRYsExII5ot+CAAw444IADDjjggKOfjKU+4PDmgAMOOOCAAw444IADDmcrcDiyd2QPBxwmweAwQyrT53JvRVVuvN0/3m4a/v0Vp6w4NvjEFxyCQ3AIDjjggAMOOOCAAw444IADDjjggENwCA7BAQcc5jngMAkGhxlSOEyfw+HeChx5ZPABR3scsYMFx0b7BMeAOHo9azjggAMOOOCAAw444Oj6B2M4vDnggAMOOOCAAw444IDD2Qocjuwd2cMBh0kwOMyQyvS53FuRG2+Cw11ZOOCAAw444IADDjjggAMOwSE4BIfggAMOOOCAAw444IADDvMccJgEg8MMqUyfy70VjYzDjTc4doTj9Ts5S7VwdLmxDkcCHL3+aAAHHHDAAQcccMABBxxd/2AMhzcHHHDAAQcccMABBxxwOFuBw5G9I3s44DAJBocZUpk+l3srqnLj7dmKnYNDcAgOwSE4BIfgkOAQHIJDcAgOwSE4BIfgEBwSHIJDcAgOwSE4BIfgEByCQ4JDcAgOwSE4BIfgULKuo2PSQ0Q5HWEAAAAASUVORK5CYII=">
-<title>Jahreszahlen-Trainer</title>
+<title>Vormärz-Trainer</title>
 <style>
   :root {
     --bg: #f5f5f7;
@@ -55,6 +55,45 @@
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
   }
+  .hidden { display: none !important; }
+
+  /* ---------- Kopf mit Bereichs-Umschalter ---------- */
+  .top {
+    max-width: 1080px;
+    margin: 0 auto 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .top h1, .tl-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0;
+  }
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 14px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+  .tabs button {
+    background: transparent;
+    color: var(--muted);
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 0.85em;
+  }
+  .tabs button.active { background: var(--accent); color: #fff; }
+  @media (prefers-color-scheme: dark) { .tabs button.active { color: #111; } }
+
+  .view:not(.active) { display: none !important; }
   .app {
     max-width: 1080px;
     margin: 0 auto;
@@ -62,21 +101,11 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 28px;
   }
-  header h1 {
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin: 0 0 12px;
-  }
+  .learn { max-width: 760px; margin: 0 auto; }
+  .learn-intro { color: var(--muted); font-size: 0.85em; margin: 0 0 8px; }
 
-  /* ---------- Abfrage-Karte ---------- */
-  .panel {
-    position: relative;
-    z-index: 5;
-    align-self: start;
-  }
+  /* ---------- Karten ---------- */
+  .panel { position: relative; z-index: 5; align-self: start; }
   @media (min-width: 600px) and (min-height: 700px) {
     .panel { position: sticky; top: 12px; }
   }
@@ -123,10 +152,11 @@
     min-height: 1.4em;
   }
   .prev b { color: var(--text); font-family: var(--rounded); font-variant-numeric: tabular-nums; }
+
+  /* ---------- Jahreszahl-Eingabe ---------- */
   form { display: flex; gap: 10px; }
   .fields { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
   .dash { color: var(--muted); font-size: 1.4em; font-weight: 600; }
-  /* Zweites Feld nur bei Zeiträumen (z. B. Wiener Kongress) */
   .fields.single .dash, .fields.single #answer2 { display: none; }
   input {
     flex: 1;
@@ -157,10 +187,20 @@
     color: #fff;
     cursor: pointer;
     -webkit-appearance: none;
-    touch-action: manipulation;
   }
   @media (prefers-color-scheme: dark) { button { color: #111; } }
   button.secondary { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+  button.wide { width: 100%; padding: 15px; }
+  .linkbtn {
+    background: none;
+    color: var(--muted);
+    padding: 0;
+    font-weight: 400;
+    font-size: inherit;
+    text-decoration: underline;
+  }
+  @media (prefers-color-scheme: dark) { .linkbtn { color: var(--muted); } }
+
   .feedback {
     margin-top: 16px;
     padding: 14px 16px;
@@ -171,7 +211,9 @@
   .feedback.bad { display: block; background: var(--bad-soft); color: var(--bad); }
   .feedback .main { font-weight: 600; }
   .feedback .main b { font-family: var(--rounded); font-size: 1.15em; }
-  .feedback .rel { color: var(--text); opacity: .75; font-size: 0.85em; margin-top: 2px; }
+  .feedback .rel, .feedback .note { color: var(--text); opacity: .8; font-size: 0.85em; margin-top: 4px; }
+  .feedback .fix { color: var(--text); font-size: 0.85em; margin-top: 8px; font-weight: 600; }
+  .feedback .fix.done { color: var(--ok); }
   .fields.shake { animation: shake .35s; }
   .fields.shake input { border-color: var(--bad); }
   @keyframes shake {
@@ -179,8 +221,6 @@
     25% { transform: translateX(-6px); }
     75% { transform: translateX(6px); }
   }
-  .feedback .fix { color: var(--text); font-size: 0.85em; margin-top: 8px; font-weight: 600; }
-  .feedback .fix.done { color: var(--ok); }
 
   .score {
     font-family: var(--rounded);
@@ -193,7 +233,113 @@
   .score-sub { text-align: center; color: var(--muted); margin-bottom: 22px; }
   .actions { display: flex; flex-direction: column; gap: 10px; }
   .actions button { width: 100%; padding: 15px; }
-  .hidden { display: none !important; }
+
+  /* ---------- Wissens-Quiz ---------- */
+  .chip {
+    display: inline-block;
+    font-size: 0.72em;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+  }
+  .qprompt { font-size: 1.3em; font-weight: 700; line-height: 1.25; margin: 0 0 16px; }
+  .opts { display: grid; gap: 8px; }
+  .opts.events { grid-template-columns: 1fr 1fr; }
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    background: var(--bg);
+    color: var(--text);
+    box-shadow: inset 0 0 0 2px var(--line);
+    font-weight: 500;
+    font-size: 0.9em;
+    line-height: 1.3;
+    padding: 12px 14px;
+    border-radius: 12px;
+    transition: background .15s, box-shadow .15s, opacity .2s;
+  }
+  .opt .ol { flex: 1; }
+  .opt small { display: block; color: var(--muted); font-family: var(--rounded); font-weight: 600; font-size: 0.85em; }
+  .opt .k {
+    display: none;
+    flex: none;
+    width: 1.6em; height: 1.6em;
+    border-radius: 6px;
+    background: var(--card);
+    color: var(--muted);
+    font-size: 0.75em;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+  }
+  @media (hover: hover) and (pointer: fine) { .opt .k { display: inline-flex; } }
+  .opt .box {
+    flex: none;
+    width: 22px; height: 22px;
+    border-radius: 7px;
+    box-shadow: inset 0 0 0 2px var(--line);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: transparent;
+  }
+  .opt.sel { box-shadow: inset 0 0 0 2px var(--accent); background: var(--accent-soft); }
+  .opt.sel .box { background: var(--accent); box-shadow: none; color: #fff; }
+  .opt.ok { box-shadow: inset 0 0 0 2px var(--ok); background: var(--ok-soft); color: var(--ok); }
+  .opt.bad { box-shadow: inset 0 0 0 2px var(--bad); background: var(--bad-soft); color: var(--bad); }
+  .opt.missed { box-shadow: none; outline: 2px dashed var(--ok); outline-offset: -2px; }
+  .opt.dim { opacity: .45; }
+  .opt.picked .box { box-shadow: none; color: var(--card); }
+  .opt.ok.picked .box { background: var(--ok); }
+  .opt.bad.picked .box { background: var(--bad); }
+  .opt:disabled { cursor: default; }
+  .answerbox {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 12px 14px;
+    white-space: pre-line;
+    font-size: 0.9em;
+  }
+  .answerbox .label { margin-bottom: 4px; }
+  .selfrate { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .selfrate .yes { background: var(--ok); }
+  .selfrate .no { background: var(--bad); }
+  .qactions { margin-top: 14px; }
+  .qactions button { width: 100%; }
+  .qfoot { text-align: center; font-size: 0.75em; margin-top: 12px; }
+
+  .field { margin-bottom: 18px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .chips button {
+    padding: 6px 12px;
+    font-size: 0.78em;
+    font-weight: 500;
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--muted);
+    box-shadow: inset 0 0 0 1.5px var(--line);
+  }
+  .chips button.on { background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .seg { display: flex; gap: 2px; background: var(--bg); border-radius: 12px; padding: 3px; margin-top: 4px; }
+  .seg button {
+    flex: 1;
+    background: transparent;
+    color: var(--muted);
+    padding: 8px;
+    font-size: 0.82em;
+    border-radius: 10px;
+  }
+  .seg button.on { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  .stats { font-size: 0.78em; color: var(--muted); text-align: center; margin: 12px 0 0; }
+  button:disabled { opacity: .45; cursor: default; }
+  .opt:disabled { opacity: 1; }
+  .opt.dim:disabled { opacity: .45; }
 
   /* ---------- Zeitstrahl ---------- */
   .timeline {
@@ -203,7 +349,7 @@
     --yearw: 5.2em;
     --railw: 36px;
   }
-  .timeline li {
+  .timeline > li {
     display: grid;
     grid-template-columns: var(--yearw) var(--railw) 1fr;
     column-gap: 10px;
@@ -219,8 +365,9 @@
     transform: translateX(-50%);
     background: var(--line);
   }
-  .node:first-child .rail::before { top: 50%; }
-  .node:last-child .rail::before { bottom: 50%; }
+  .node.first .rail::before { top: 50%; }
+  .node.last .rail::before { bottom: 50%; }
+  .tl-notes:last-child .rail::before { display: none; }
 
   .node { min-height: 64px; align-items: center; }
   .year {
@@ -258,15 +405,15 @@
   .node.pending .year { color: var(--line); }
   .node.pending .title { color: var(--muted); font-weight: 500; }
 
-  .node.current .year { color: var(--accent); }
-  .node.current .dot {
+  .node.current .year, .node.focus .year { color: var(--accent); }
+  .node.current .dot, .node.focus .dot {
     width: 22px; height: 22px;
     border-color: var(--accent);
     background: var(--accent);
     box-shadow: 0 0 0 6px var(--accent-soft);
     animation: pulse 1.8s ease-in-out infinite;
   }
-  .node.current .info { background: var(--accent-soft); }
+  .node.current .info, .node.focus .info { background: var(--accent-soft); }
   .node.current .meta { color: var(--accent); font-weight: 600; }
   @keyframes pulse {
     0%, 100% { box-shadow: 0 0 0 6px var(--accent-soft); }
@@ -316,32 +463,60 @@
   }
   .gap.revealed .pill { opacity: 1; transform: none; }
 
-  .tl-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin: 0 0 4px;
+  /* Lernen: antippbare Ereignisse mit Notizen */
+  .clickable .node .info { cursor: pointer; }
+  .clickable .node .info:hover { background: var(--accent-soft); }
+  .clickable .node .title::after { content: " ›"; color: var(--muted); font-weight: 400; }
+  .clickable .node.open .title::after { content: " ⌄"; }
+  .clickable .node.open .info { background: var(--accent-soft); }
+  .timeline > .tl-notes { display: none; }
+  .timeline > .tl-notes.open { display: grid; }
+  .notecard {
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 14px 16px;
+    margin: 4px 0 14px;
+    font-size: 0.85em;
   }
+  .notecard .where { color: var(--bad); font-weight: 700; margin-bottom: 6px; }
+  .notecard .ni { margin: 6px 0; }
+  .notecard .nk { font-weight: 600; }
+  .notecard ul { margin: 2px 0 0; padding-left: 1.2em; }
+  .notecard li { margin: 2px 0; }
+  .nfoot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.9em;
+  }
+  .nfoot button { padding: 8px 12px; font-size: 0.9em; border-radius: 10px; white-space: nowrap; }
 
   /* ---------- Layout ---------- */
+  .tl-title { margin-bottom: 4px; }
   @media (min-width: 900px) {
     .app { grid-template-columns: minmax(360px, 420px) 1fr; align-items: start; gap: 48px; }
     .panel { top: 24px; }
-    .timeline { padding-top: 34px; }
-    .tl-title { display: none; }
+    .app .timeline { padding-top: 34px; }
+    .app .tl-title { display: none; }
   }
   @media (max-width: 899px) {
-    .panel { margin: 0 -4px; }
     .card { padding: 20px 18px; }
     .event { font-size: 1.4em; }
+    #view-quiz .tl-wrap { display: none; }
   }
   @media (max-width: 599px) {
     body { font-size: 17px; padding-top: calc(12px + env(safe-area-inset-top)); }
+    .top { margin-bottom: 14px; gap: 8px; }
+    .top h1 { font-size: 0.72rem; }
+    .tabs { width: 100%; }
+    .tabs button { flex: 1; padding: 8px 4px; }
     .app { gap: 20px; }
-    header h1 { font-size: 0.72rem; margin-bottom: 8px; }
-    .panel { margin: 0; }
     .card { padding: 16px; border-radius: 18px; }
     .progress { font-size: 0.75em; margin-bottom: 6px; }
     .bar { height: 5px; margin-bottom: 14px; }
@@ -355,19 +530,37 @@
     .feedback .fix { margin-top: 4px; }
     .score { font-size: 2.6em; }
     .score-sub { margin-bottom: 16px; font-size: 0.9em; }
-    .actions button { padding: 13px; }
+    .actions button, button.wide { padding: 13px; }
+    .qprompt { font-size: 1.15em; margin-bottom: 12px; }
+    .opt { padding: 10px 12px; }
+    .opts.events { gap: 6px; }
+    .qactions button { padding: 13px; border-radius: 12px; }
     .timeline { --yearw: 4.6em; --railw: 28px; }
-    .timeline li { column-gap: 6px; }
+    .timeline > li { column-gap: 6px; }
+    .nfoot { flex-direction: column; align-items: stretch; }
   }
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="panel" id="panel">
-    <header><h1>Jahreszahlen · Vormärz</h1></header>
+<header class="top">
+  <h1>Vormärz · 1813–1832</h1>
+  <nav class="tabs" id="tabs">
+    <button data-view="learn">Lernen</button>
+    <button data-view="years">Jahreszahlen</button>
+    <button data-view="quiz">Quiz</button>
+  </nav>
+</header>
 
-    <!-- Abfrage -->
-    <section id="quiz" class="card">
+<!-- ===== Lernen ===== -->
+<section class="view learn" id="view-learn">
+  <p class="learn-intro">Tippe auf ein Ereignis, um die Zusammenfassung zu sehen.</p>
+  <ol class="timeline clickable" id="tlLearn" aria-label="Zeitstrahl mit Zusammenfassungen"></ol>
+</section>
+
+<!-- ===== Jahreszahlen ===== -->
+<section class="view app" id="view-years">
+  <div class="panel" id="yPanel">
+    <section id="yQuiz" class="card">
       <div class="progress">
         <span id="roundLabel">Runde 1</span>
         <span id="countLabel">1 / 8</span>
@@ -392,8 +585,7 @@
       <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
     </section>
 
-    <!-- Rundenergebnis -->
-    <section id="result" class="card hidden">
+    <section id="yResult" class="card hidden">
       <div class="label" id="resultRound" style="text-align:center"></div>
       <div class="score" id="scoreText"></div>
       <div class="score-sub" id="scoreSub"></div>
@@ -406,26 +598,435 @@
 
   <section class="tl-wrap">
     <h2 class="tl-title">Zeitstrahl</h2>
-    <ol class="timeline" id="timeline" aria-label="Zeitstrahl"></ol>
+    <ol class="timeline" id="tlYears" aria-label="Zeitstrahl"></ol>
   </section>
-</div>
+</section>
+
+<!-- ===== Wissens-Quiz ===== -->
+<section class="view app" id="view-quiz">
+  <div class="panel" id="qPanel">
+    <section id="qStart" class="card">
+      <div class="label">Wissens-Quiz</div>
+      <p class="event">Teste dein Wissen</p>
+      <div class="field" style="margin-top:16px">
+        <div class="label">Ereignisse</div>
+        <div class="chips" id="qChips"></div>
+      </div>
+      <div class="field">
+        <div class="label">Reihenfolge</div>
+        <div class="seg" id="qOrder">
+          <button data-v="chrono">Chronologisch</button>
+          <button data-v="mixed">Gemischt</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="label">Fragen pro Runde</div>
+        <div class="seg" id="qSize">
+          <button data-v="10">10</button>
+          <button data-v="20">20</button>
+          <button data-v="0">Alle</button>
+        </div>
+      </div>
+      <button id="qStartBtn" class="wide">Los geht's</button>
+      <p class="stats" id="qStats"></p>
+    </section>
+
+    <section id="qRun" class="card hidden">
+      <div class="progress">
+        <span id="qRoundLabel"></span>
+        <span id="qCount"></span>
+      </div>
+      <div class="bar"><div id="qBar"></div></div>
+      <span class="chip" id="qChip"></span>
+      <p class="qprompt" id="qPrompt"></p>
+      <div id="qOpts" class="opts"></div>
+      <div id="qAnswer" class="answerbox hidden"></div>
+      <div id="qSelf" class="selfrate hidden">
+        <button class="yes" id="qYes">✓ Wusste ich</button>
+        <button class="no" id="qNo">✗ Wusste ich nicht</button>
+      </div>
+      <div id="qFeedback" class="feedback" role="status" aria-live="polite"></div>
+      <div class="qactions"><button id="qPrimary"></button></div>
+      <div class="qfoot"><button class="linkbtn" id="qQuit">Runde abbrechen</button></div>
+    </section>
+
+    <section id="qResult" class="card hidden">
+      <div class="label" id="qResRound" style="text-align:center"></div>
+      <div class="score" id="qScore"></div>
+      <div class="score-sub" id="qSub"></div>
+      <div class="actions">
+        <button id="qAgain"></button>
+        <button id="qNew" class="secondary">Neue Runde einstellen</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="tl-wrap">
+    <ol class="timeline" id="tlQuiz" aria-label="Zeitstrahl"></ol>
+  </section>
+</section>
 
 <script>
-  // Chronologisch sortiert. start/end: für die Abstände im Zeitstrahl,
-  // display: angezeigte Lösung, accept: akzeptierte Antworten
-  const EVENTS = [
-    { name: "Völkerschlacht bei Leipzig",    start: 1813, end: 1813, display: "1813",    accept: ["1813"] },
-    { name: "Wiener Kongress",               start: 1814, end: 1815, display: "1814/15", accept: ["1814", "1815", "1814-1815"] },
-    { name: "Deutsche Bundesakte",           start: 1815, end: 1815, display: "1815",    accept: ["1815"] },
-    { name: "Wartburgfest",                  start: 1817, end: 1817, display: "1817",    accept: ["1817"] },
-    { name: "Ermordung Kotzebues",           start: 1819, end: 1819, display: "1819",    accept: ["1819"] },
-    { name: "Karlsbader Beschlüsse",         start: 1819, end: 1819, display: "1819",    accept: ["1819"] },
-    { name: "Julirevolution in Frankreich",  start: 1830, end: 1830, display: "1830",    accept: ["1830"] },
-    { name: "Hambacher Fest",                start: 1832, end: 1832, display: "1832",    accept: ["1832"] },
-  ];
-  const ALL = EVENTS.map((_, i) => i);
+  // ================================================================
+  //  INHALT – neue Themen/Notizen hier ergänzen
+  // ================================================================
 
+  // Chronologisch sortiert. start/end: für die Abstände im Zeitstrahl,
+  // display: angezeigte Jahreszahl, accept: akzeptierte Antworten im Jahreszahlen-Quiz,
+  // notes: Abschrift der Notizen – [Stichwort, Text] oder [Stichwort, [Unterpunkte]] oder [Text, null]
+  const EVENTS = [
+    { id: "leipzig", name: "Völkerschlacht bei Leipzig", place: "Leipzig", start: 1813, end: 1813, display: "1813", accept: ["1813"],
+      notes: [["Napoleon besiegt", null]] },
+    { id: "kongress", name: "Wiener Kongress", place: "Wien", start: 1814, end: 1815, display: "1814/15", accept: ["1814", "1815", "1814-1815"],
+      notes: [
+        ["Teilnehmer", "Preußen, Österreich, England, Russland, Frankreich"],
+        ["Ziel 1: Gleichgewicht der Mächte", ["Kein Land soll sich noch einmal so hervortun wie Frankreich"]],
+        ["Ziel 2: Restauration", ["Rückkehr zur alten Ordnung (Fürstenherrschaft)", "Abwehr von liberalen und nationalen Forderungen"]],
+        ["Ergebnis", "Deutsche Bundesakte (siehe nächstes Ereignis)"],
+      ] },
+    { id: "bundesakte", name: "Deutsche Bundesakte", place: "", start: 1815, end: 1815, display: "1815", accept: ["1815"],
+      notes: [
+        ["Kein geeintes Deutschland, sondern ein Bund aus unabhängigen Fürstentümern", null],
+        ["Gegenseitige Hilfe, wenn der Bund gefährdet ist", null],
+        ["Verfassungsversprechen (Art. 13)", ["aber vage, ohne Frist und ohne Angabe zur Umsetzung"]],
+      ] },
+    { id: "wartburg", name: "Wartburgfest", place: "Thüringen", start: 1817, end: 1817, display: "1817", accept: ["1817"],
+      notes: [
+        ["Teilnehmer", "ca. 500 Studenten aus Burschenschaften"],
+        ["Anlass", "300 Jahre Reformation und Jahrestag der Völkerschlacht"],
+        ["Auslöser", "Enttäuschung über den Wiener Kongress"],
+        ["Forderungen", ["Geeintes Deutschland", "Pressefreiheit = Meinungsfreiheit", "Verfassung (Art. 13)"]],
+        ["Bücherverbrennung", "u. a. Code Napoléon und Werke Kotzebues"],
+      ] },
+    { id: "kotzebue", name: "Ermordung Kotzebues", place: "", start: 1819, end: 1819, display: "1819", accept: ["1819"],
+      notes: [
+        ["Täter", "ein Mitglied der Burschenschaften"],
+        ["Auslöser", "Wartburgfest"],
+      ] },
+    { id: "karlsbad", name: "Karlsbader Beschlüsse", place: "bundesweit", start: 1819, end: 1819, display: "1819", accept: ["1819"],
+      notes: [
+        ["Auslöser", "Ermordung Kotzebues"],
+        ["Maßnahmen", ["Burschenschaften verboten", "Zensur bundesweit verschärft", "Universitäten überwacht"]],
+      ] },
+    { id: "juli", name: "Julirevolution in Frankreich", place: "Frankreich", start: 1830, end: 1830, display: "1830", accept: ["1830"],
+      notes: [
+        ["Auslöser", "König Karl X. will das Parlament auflösen, die Pressefreiheit abschaffen und das Wahlrecht einschränken"],
+        ["Verlauf", "Das Volk stürzt ihn innerhalb von drei Tagen"],
+        ["Ergebnis", "Louis-Philippe wird König („Bürgerkönig“) und bindet sich an eine Verfassung"],
+      ] },
+    { id: "hambach", name: "Hambacher Fest", place: "Bayern", start: 1832, end: 1832, display: "1832", accept: ["1832"],
+      notes: [
+        ["Teilnehmer", "20.000–30.000 Menschen aus allen Schichten, dazu Gäste aus Polen und Frankreich"],
+        ["Organisation", "Siebenpfeiffer und Wirth"],
+        ["Auslöser", "Julirevolution 1830"],
+        ["Forderungen", ["Geeintes Deutschland", "Volkssouveränität", "Pressefreiheit und Bürgerrechte", "Solidarität mit anderen unterdrückten Völkern Europas"]],
+        ["Symbol", "Schwarz-Rot-Gold"],
+        ["Folgen", ["Verbot politischer Vereine und Versammlungen", "Zensur erneut verschärft", "Siebenpfeiffer und Wirth verhaftet"]],
+      ] },
+  ];
+
+  // Fragetypen:
+  //  mc    – eine richtige Antwort (a) + falsche (o)
+  //  multi – mehrere richtige (a[]) + falsche (o[])
+  //  event – richtiges Ereignis antippen (a = Ereignis-id)
+  //  card  – offene Frage, Antwort aufdecken und selbst bewerten
+  const QUESTIONS = [
+    // Völkerschlacht
+    { id: "le1", ev: "leipzig", type: "mc", q: "Was geschah in der Völkerschlacht bei Leipzig 1813?",
+      a: "Napoleon wurde besiegt", o: ["Napoleon wurde zum Kaiser gekrönt", "Der Deutsche Bund wurde gegründet", "Preußen wurde von Frankreich besetzt"],
+      note: "Völkerschlacht 1813 – Napoleon besiegt" },
+    { id: "le2", ev: "leipzig", type: "event", q: "Wessen Jahrestag wurde beim Wartburgfest gefeiert – neben 300 Jahren Reformation?",
+      a: "leipzig", note: "Wartburgfest – Anlass: 300 Jahre Reformation und Jahrestag der Völkerschlacht" },
+
+    // Wiener Kongress
+    { id: "wk1", ev: "kongress", type: "mc", q: "Welche Mächte nahmen am Wiener Kongress teil?",
+      a: "Preußen, Österreich, England, Russland, Frankreich",
+      o: ["Preußen, Bayern, Polen, Frankreich", "Nur Österreich und Preußen", "Frankreich, Spanien, Italien, Polen"],
+      note: "Wiener Kongress – Teilnehmer: Preußen, Österreich, England, Russland, Frankreich" },
+    { id: "wk2", ev: "kongress", type: "card", q: "Nenne die zwei Ziele des Wiener Kongresses und erkläre sie kurz.",
+      a: "1. Gleichgewicht der Mächte – kein Land soll sich noch einmal so hervortun wie Frankreich.\n2. Restauration – Rückkehr zur alten Ordnung (Fürstenherrschaft), Abwehr von liberalen und nationalen Forderungen." },
+    { id: "wk3", ev: "kongress", type: "mc", q: "Was bedeutet „Restauration“?",
+      a: "Rückkehr zur alten Ordnung (Fürstenherrschaft)", o: ["Gleichgewicht der Mächte in Europa", "Gründung eines geeinten Deutschlands", "Eine Verfassung für alle Staaten"],
+      note: "Ziel 2: Restauration – Rückkehr zur alten Ordnung (Fürstenherrschaft), Abwehr von liberalen und nationalen Forderungen" },
+    { id: "wk4", ev: "kongress", type: "mc", q: "Was bedeutet „Gleichgewicht der Mächte“?",
+      a: "Kein Land soll sich noch einmal so hervortun wie Frankreich", o: ["Rückkehr zur alten Ordnung", "Fürsten und Volk teilen sich die Macht", "Alle Staaten bekommen gleich viel Land"],
+      note: "Ziel 1: Gleichgewicht der Mächte – kein Land soll sich noch einmal so hervortun wie Frankreich" },
+    { id: "wk5", ev: "kongress", type: "mc", q: "Wogegen richtete sich die Restauration?",
+      a: "Gegen liberale und nationale Forderungen", o: ["Gegen die Fürstenherrschaft", "Gegen den Einfluss Russlands", "Gegen die Kirche"],
+      note: "Restauration – Abwehr von liberalen und nationalen Forderungen" },
+    { id: "wk6", ev: "kongress", type: "event", q: "Worüber waren die Studenten beim Wartburgfest enttäuscht?",
+      a: "kongress", note: "Wartburgfest – Auslöser: Enttäuschung über den Wiener Kongress" },
+
+    // Bundesakte
+    { id: "ba1", ev: "bundesakte", type: "mc", q: "Was schuf die Deutsche Bundesakte?",
+      a: "Einen Bund aus unabhängigen Fürstentümern", o: ["Ein geeintes Deutschland mit einem Kaiser", "Eine deutsche Republik", "Ein Parlament für alle Deutschen"],
+      note: "Kein geeintes Deutschland, sondern ein Bund aus unabhängigen Fürstentümern" },
+    { id: "ba2", ev: "bundesakte", type: "mc", q: "In welchem Artikel der Bundesakte steht das Verfassungsversprechen?",
+      a: "Art. 13", o: ["Art. 1", "Art. 7", "Art. 21"],
+      note: "Verfassungsversprechen (Art. 13) – aber vage, ohne Frist und ohne Angabe zur Umsetzung" },
+    { id: "ba3", ev: "bundesakte", type: "multi", q: "Was war das Problem am Verfassungsversprechen? (mehrere richtig)",
+      a: ["Es war vage", "Es hatte keine Frist", "Es gab keine Angabe zur Umsetzung"], o: ["Es galt nur für Preußen", "Das Volk lehnte es ab"],
+      note: "Verfassungsversprechen (Art. 13) – aber vage, ohne Frist und ohne Angabe zur Umsetzung" },
+    { id: "ba4", ev: "bundesakte", type: "mc", q: "Was sicherten sich die Mitglieder des Deutschen Bundes gegenseitig zu?",
+      a: "Hilfe, wenn der Bund gefährdet ist", o: ["Freien Handel ohne Zölle", "Eine gemeinsame Armee unter Preußen", "Pressefreiheit"],
+      note: "Gegenseitige Hilfe, wenn der Bund gefährdet ist" },
+    { id: "ba5", ev: "bundesakte", type: "card", q: "Warum war die Deutsche Bundesakte für Liberale und Nationale enttäuschend?",
+      a: "Statt eines geeinten Deutschlands gab es nur einen Bund aus unabhängigen Fürstentümern.\nDas Verfassungsversprechen (Art. 13) war vage – ohne Frist und ohne Angabe zur Umsetzung." },
+
+    // Wartburgfest
+    { id: "wa1", ev: "wartburg", type: "mc", q: "Wo fand das Wartburgfest statt?",
+      a: "Thüringen", o: ["Bayern", "Wien", "Frankreich"], note: "Wartburgfest – Thüringen, 1817" },
+    { id: "wa2", ev: "wartburg", type: "mc", q: "Wer nahm am Wartburgfest teil?",
+      a: "Ca. 500 Studenten aus Burschenschaften", o: ["20.000–30.000 Menschen aus allen Schichten", "Die Fürsten des Deutschen Bundes", "Gesandte der Großmächte"],
+      note: "Teilnehmer: ca. 500 Studenten aus Burschenschaften" },
+    { id: "wa3", ev: "wartburg", type: "multi", q: "Was war der Anlass des Wartburgfests? (mehrere richtig)",
+      a: ["300 Jahre Reformation", "Jahrestag der Völkerschlacht"], o: ["Die Julirevolution", "Die Ermordung Kotzebues"],
+      note: "Anlass: 300 Jahre Reformation und Jahrestag der Völkerschlacht" },
+    { id: "wa4", ev: "wartburg", type: "mc", q: "Was war der Auslöser des Wartburgfests?",
+      a: "Enttäuschung über den Wiener Kongress", o: ["Die Julirevolution in Frankreich", "Die Karlsbader Beschlüsse", "Die Ermordung Kotzebues"],
+      note: "Auslöser: Enttäuschung über den Wiener Kongress" },
+    { id: "wa5", ev: "wartburg", type: "multi", q: "Welche Forderungen hatte das Wartburgfest? (mehrere richtig)",
+      a: ["Geeintes Deutschland", "Pressefreiheit", "Verfassung (Art. 13)"], o: ["Volkssouveränität", "Solidarität mit unterdrückten Völkern Europas"],
+      note: "Forderungen: geeintes Deutschland, Pressefreiheit = Meinungsfreiheit, Verfassung (Art. 13). Volkssouveränität und Solidarität kommen erst beim Hambacher Fest." },
+    { id: "wa6", ev: "wartburg", type: "event", q: "Bei welchem Ereignis gab es eine Bücherverbrennung?",
+      a: "wartburg", note: "Wartburgfest – Bücherverbrennung (u. a. Code Napoléon und Werke Kotzebues)" },
+    { id: "wa7", ev: "wartburg", type: "mc", q: "Was wurde beim Wartburgfest unter anderem verbrannt?",
+      a: "Code Napoléon und Werke Kotzebues", o: ["Die Deutsche Bundesakte", "Die Karlsbader Beschlüsse", "Fahnen in Schwarz-Rot-Gold"],
+      note: "Bücherverbrennung (u. a. Code Napoléon und Werke Kotzebues)" },
+    { id: "wa8", ev: "wartburg", type: "card", q: "Warum kam es zum Wartburgfest? Nenne Anlass und Auslöser.",
+      a: "Anlass: 300 Jahre Reformation und Jahrestag der Völkerschlacht.\nAuslöser: Enttäuschung über den Wiener Kongress (kein geeintes Deutschland, nur ein vages Verfassungsversprechen)." },
+
+    // Kotzebue
+    { id: "ko1", ev: "kotzebue", type: "mc", q: "Wer ermordete Kotzebue?",
+      a: "Ein Mitglied der Burschenschaften", o: ["Ein französischer Soldat", "Ein Anhänger Napoleons", "Ein Gesandter des Wiener Kongresses"],
+      note: "Ermordung Kotzebues durch ein Mitglied der Burschenschaften" },
+    { id: "ko2", ev: "kotzebue", type: "event", q: "Was war der Auslöser für die Ermordung Kotzebues?",
+      a: "wartburg", note: "Ermordung Kotzebues – Auslöser: Wartburgfest" },
+
+    // Karlsbader Beschlüsse
+    { id: "kb1", ev: "karlsbad", type: "event", q: "Welches Ereignis löste die Karlsbader Beschlüsse aus?",
+      a: "kotzebue", note: "Karlsbader Beschlüsse – Auslöser: Ermordung Kotzebues" },
+    { id: "kb2", ev: "karlsbad", type: "mc", q: "Wo galten die Karlsbader Beschlüsse?",
+      a: "Bundesweit", o: ["Nur in Preußen", "Nur in Österreich", "Nur in Thüringen"], note: "Karlsbader Beschlüsse – 1819, bundesweit" },
+    { id: "kb3", ev: "karlsbad", type: "multi", q: "Welche Maßnahmen enthielten die Karlsbader Beschlüsse? (mehrere richtig)",
+      a: ["Burschenschaften verboten", "Zensur bundesweit verschärft", "Universitäten überwacht"], o: ["Siebenpfeiffer und Wirth verhaftet", "Parlament aufgelöst"],
+      note: "Maßnahmen: Burschenschaften verboten, Zensur bundesweit verschärft, Universitäten überwacht. Die Verhaftung von Siebenpfeiffer und Wirth war eine Folge des Hambacher Fests." },
+    { id: "kb4", ev: "karlsbad", type: "event", q: "Bei welchem Ereignis wurden die Burschenschaften verboten?",
+      a: "karlsbad", note: "Karlsbader Beschlüsse – Maßnahmen: Burschenschaften verboten" },
+    { id: "kb5", ev: "karlsbad", type: "card", q: "Erkläre die Kette: Wartburgfest → Ermordung Kotzebues → Karlsbader Beschlüsse.",
+      a: "1817 fordern Studenten der Burschenschaften beim Wartburgfest Einheit, Pressefreiheit und eine Verfassung.\n1819 ermordet ein Mitglied der Burschenschaften Kotzebue.\nDarauf folgen 1819 die Karlsbader Beschlüsse: Burschenschaften verboten, Zensur bundesweit verschärft, Universitäten überwacht." },
+
+    // Julirevolution
+    { id: "jr1", ev: "juli", type: "multi", q: "Was wollte König Karl X. tun? (mehrere richtig)",
+      a: ["Das Parlament auflösen", "Die Pressefreiheit abschaffen", "Das Wahlrecht einschränken"], o: ["Eine Verfassung einführen", "Die Burschenschaften verbieten"],
+      note: "Auslöser: Karl X. will das Parlament auflösen, die Pressefreiheit abschaffen und das Wahlrecht einschränken" },
+    { id: "jr2", ev: "juli", type: "mc", q: "Wie verlief die Julirevolution?",
+      a: "Das Volk stürzte den König innerhalb von drei Tagen", o: ["Der König schlug den Aufstand nieder", "Preußen griff ein und beendete sie", "Sie dauerte drei Jahre"],
+      note: "Verlauf: Das Volk stürzt ihn innerhalb von drei Tagen" },
+    { id: "jr3", ev: "juli", type: "mc", q: "Was war das Ergebnis der Julirevolution?",
+      a: "Louis-Philippe wird König und bindet sich an eine Verfassung", o: ["Frankreich wird eine Republik", "Karl X. bleibt König, verzichtet aber auf Zensur", "Napoleon kehrt an die Macht zurück"],
+      note: "Ergebnis: Louis-Philippe wird König („Bürgerkönig“) und bindet sich an eine Verfassung" },
+    { id: "jr4", ev: "juli", type: "mc", q: "Wie wurde Louis-Philippe genannt?",
+      a: "Bürgerkönig", o: ["Sonnenkönig", "Volkskaiser", "Freiheitskönig"], note: "Louis-Philippe wird König („Bürgerkönig“)" },
+    { id: "jr5", ev: "juli", type: "event", q: "Welches Ereignis war der Auslöser des Hambacher Fests?",
+      a: "juli", note: "Hambacher Fest – Auslöser: Julirevolution 1830" },
+
+    // Hambacher Fest
+    { id: "hf1", ev: "hambach", type: "mc", q: "Wo fand das Hambacher Fest statt?",
+      a: "Bayern", o: ["Thüringen", "Frankreich", "Wien"], note: "Hambacher Fest – 1832, Bayern" },
+    { id: "hf2", ev: "hambach", type: "mc", q: "Wer nahm am Hambacher Fest teil?",
+      a: "20.000–30.000 Menschen aus allen Schichten, dazu Gäste aus Polen und Frankreich",
+      o: ["Ca. 500 Studenten aus Burschenschaften", "Nur Abgeordnete der Landtage", "Die Fürsten des Deutschen Bundes"],
+      note: "Teilnehmer: 20.000–30.000 Menschen aus allen Schichten, dazu Gäste aus Polen und Frankreich" },
+    { id: "hf3", ev: "hambach", type: "mc", q: "Wer organisierte das Hambacher Fest?",
+      a: "Siebenpfeiffer und Wirth", o: ["Die Burschenschaften", "Louis-Philippe", "Kotzebue"], note: "Organisation: Siebenpfeiffer und Wirth" },
+    { id: "hf4", ev: "hambach", type: "multi", q: "Welche Forderungen hatte das Hambacher Fest? (mehrere richtig)",
+      a: ["Geeintes Deutschland", "Volkssouveränität", "Pressefreiheit und Bürgerrechte", "Solidarität mit unterdrückten Völkern Europas"],
+      o: ["Rückkehr zur Fürstenherrschaft", "Gleichgewicht der Mächte"],
+      note: "Forderungen: geeintes Deutschland, Volkssouveränität, Pressefreiheit und Bürgerrechte, Solidarität mit anderen unterdrückten Völkern Europas" },
+    { id: "hf5", ev: "hambach", type: "mc", q: "Welches Symbol hatte das Hambacher Fest?",
+      a: "Schwarz-Rot-Gold", o: ["Schwarz-Weiß-Rot", "Die Trikolore", "Der Reichsadler"], note: "Symbol: Schwarz-Rot-Gold" },
+    { id: "hf6", ev: "hambach", type: "multi", q: "Welche Folgen hatte das Hambacher Fest? (mehrere richtig)",
+      a: ["Verbot politischer Vereine und Versammlungen", "Zensur erneut verschärft", "Siebenpfeiffer und Wirth verhaftet"],
+      o: ["Burschenschaften verboten", "Einführung einer Verfassung"],
+      note: "Folgen: Verbot politischer Vereine und Versammlungen, Zensur erneut verschärft, Siebenpfeiffer und Wirth verhaftet. Das Verbot der Burschenschaften gehört zu den Karlsbader Beschlüssen." },
+    { id: "hf7", ev: "hambach", type: "event", q: "Bei welchem Ereignis wurde Volkssouveränität gefordert?",
+      a: "hambach", note: "Hambacher Fest – Forderungen: … Volkssouveränität …" },
+    { id: "hf8", ev: "hambach", type: "event", q: "Bei welchem Ereignis war Schwarz-Rot-Gold das Symbol?",
+      a: "hambach", note: "Hambacher Fest – Symbol: Schwarz-Rot-Gold" },
+    { id: "hf9", ev: "hambach", type: "card", q: "Vergleiche Wartburgfest und Hambacher Fest: Teilnehmer und Forderungen.",
+      a: "Teilnehmer: Wartburgfest ca. 500 Studenten aus Burschenschaften – Hambacher Fest 20.000–30.000 Menschen aus allen Schichten, dazu Gäste aus Polen und Frankreich.\nBeide fordern ein geeintes Deutschland und Pressefreiheit.\nWartburgfest zusätzlich: Verfassung (Art. 13).\nHambacher Fest zusätzlich: Volkssouveränität, Bürgerrechte, Solidarität mit unterdrückten Völkern Europas." },
+    { id: "hf10", ev: "hambach", type: "card", q: "Wie reagierten die Fürsten auf das Hambacher Fest?",
+      a: "Verbot politischer Vereine und Versammlungen, Zensur erneut verschärft, Siebenpfeiffer und Wirth verhaftet." },
+  ];
+
+  // ================================================================
+  //  Hilfsfunktionen
+  // ================================================================
+  const ALL = EVENTS.map((_, i) => i);
+  const EV_INDEX = Object.fromEntries(EVENTS.map((e, i) => [e.id, i]));
   const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  // Fortschritt bleibt im Browser des jeweiligen Geräts gespeichert
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  };
+
+  function gapYears(i) { return EVENTS[i + 1].start - EVENTS[i].end; }
+  function gapText(d) { return d === 0 ? "im selben Jahr" : d === 1 ? "1 Jahr später" : d + " Jahre später"; }
+
+  // ================================================================
+  //  Zeitstrahl (wird in allen drei Bereichen verwendet)
+  // ================================================================
+  function buildTimeline(ol, withNotes) {
+    ol.innerHTML = "";
+    EVENTS.forEach((ev, i) => {
+      const li = document.createElement("li");
+      li.className = "node";
+      li.dataset.i = i;
+      li.innerHTML =
+        '<div class="year' + (ev.display.length > 4 ? " long" : "") + '"></div>' +
+        '<div class="rail"><span class="dot"></span></div>' +
+        '<div class="info"><div class="title"></div><div class="meta"></div></div>';
+      li.querySelector(".title").textContent = ev.name;
+      ol.appendChild(li);
+
+      if (withNotes) {
+        const n = document.createElement("li");
+        n.className = "tl-notes";
+        n.dataset.i = i;
+        n.innerHTML = '<div></div><div class="rail"></div><div class="notecard"></div>';
+        ol.appendChild(n);
+      }
+      if (i < EVENTS.length - 1) {
+        const gap = document.createElement("li");
+        gap.className = "gap";
+        gap.dataset.i = i;
+        gap.setAttribute("aria-hidden", "true");
+        gap.innerHTML = '<div></div><div class="rail"></div><div><span class="pill"></span></div>';
+        gap.querySelector(".pill").textContent = "↓ " + gapText(gapYears(i));
+        ol.appendChild(gap);
+      }
+    });
+  }
+  const nodeOf = (ol, i) => ol.querySelector('.node[data-i="' + i + '"]');
+
+  // statusFn(i): "pending" | "current" | "ok" | "bad" | "known" | "focus"
+  function renderTimeline(ol, statusFn, metaFn) {
+    const revealed = (i) => ["ok", "bad", "known", "focus"].includes(statusFn(i));
+    EVENTS.forEach((ev, i) => {
+      const s = statusFn(i);
+      const node = nodeOf(ol, i);
+      const open = node.classList.contains("open");
+      node.className = "node " + s + (i === 0 ? " first" : "") + (i === EVENTS.length - 1 ? " last" : "") + (open ? " open" : "");
+      node.querySelector(".year").textContent = (s === "pending" || s === "current") ? "?" : ev.display;
+      node.querySelector(".meta").innerHTML = metaFn ? metaFn(i, s) : "";
+
+      if (i < EVENTS.length - 1) {
+        const gap = ol.querySelector('.gap[data-i="' + i + '"]');
+        const show = revealed(i) && revealed(i + 1);
+        gap.classList.toggle("revealed", show);
+        // Abstand wächst proportional zu den Jahren dazwischen
+        gap.style.setProperty("--h", show ? (40 + gapYears(i) * 14) + "px" : "34px");
+      }
+    });
+  }
+
+  function scrollToNode(ol, i, panel) {
+    const node = nodeOf(ol, i);
+    if (!node) return;
+    // Auf dem Handy scrollt die Karte mit – dann bleibt die Frage oben im Blick
+    if (getComputedStyle(panel).position !== "sticky") return;
+    const narrow = window.matchMedia("(max-width: 899px)").matches;
+    node.style.scrollMarginTop = (narrow ? panel.offsetHeight + 110 : 140) + "px";
+    node.style.scrollMarginBottom = "120px";
+    node.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  // ================================================================
+  //  Bereiche umschalten
+  // ================================================================
+  let view = "learn";
+  function showView(name) {
+    view = name;
+    document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === "view-" + name));
+    document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
+    store.set("vm-view", name);
+    if (name === "learn") renderLearn();
+    if (name === "quiz") { renderQuizStart(); renderQuizTimeline(); }
+    if (name === "years" && !$("yQuiz").classList.contains("hidden")) input.focus();
+  }
+  $("tabs").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-view]");
+    if (b) showView(b.dataset.view);
+  });
+
+  // ================================================================
+  //  LERNEN
+  // ================================================================
+  const tlLearn = $("tlLearn");
+  buildTimeline(tlLearn, true);
+
+  function mastery(i) {
+    const qs = QUESTIONS.filter((q) => q.ev === EVENTS[i].id);
+    const known = qs.filter((q) => progress[q.id] === 1).length;
+    return { known, total: qs.length };
+  }
+  function renderLearn() {
+    renderTimeline(tlLearn, () => "known", (i) => {
+      const m = mastery(i);
+      return m.total ? "Quiz: " + m.known + " / " + m.total + " sicher" : "";
+    });
+  }
+  function notesHtml(i) {
+    const ev = EVENTS[i];
+    const where = [ev.place, ev.display].filter(Boolean).join(", ");
+    let h = '<div class="where">' + esc(where) + "</div>";
+    ev.notes.forEach(([k, v]) => {
+      if (Array.isArray(v)) {
+        h += '<div class="ni"><span class="nk">' + esc(k) + ":</span><ul>" + v.map((x) => "<li>" + esc(x) + "</li>").join("") + "</ul></div>";
+      } else if (v) {
+        h += '<div class="ni"><span class="nk">' + esc(k) + ":</span> " + esc(v) + "</div>";
+      } else {
+        h += '<div class="ni">' + esc(k) + "</div>";
+      }
+    });
+    const m = mastery(i);
+    h += '<div class="nfoot"><span>' + m.known + " von " + m.total + " Quizfragen sicher</span>" +
+         '<button class="secondary" data-practice="' + i + '">Fragen dazu üben →</button></div>';
+    return h;
+  }
+  tlLearn.addEventListener("click", (e) => {
+    const practice = e.target.closest("[data-practice]");
+    if (practice) {
+      practiceEvent(+practice.dataset.practice);
+      return;
+    }
+    const info = e.target.closest(".node .info");
+    if (!info) return;
+    const node = info.parentElement;
+    const i = node.dataset.i;
+    const notes = tlLearn.querySelector('.tl-notes[data-i="' + i + '"]');
+    const open = !node.classList.contains("open");
+    node.classList.toggle("open", open);
+    notes.classList.toggle("open", open);
+    if (open) notes.querySelector(".notecard").innerHTML = notesHtml(+i);
+  });
+
+  // ================================================================
+  //  JAHRESZAHLEN-QUIZ
+  // ================================================================
+  const tlYears = $("tlYears");
+  buildTimeline(tlYears, false);
   const input = $("answer");
   const input2 = $("answer2");
   const feedback = $("feedback");
@@ -437,11 +1038,10 @@
   let correct = 0;
   let wrong = [];
   let results = {};        // index -> { status: "ok"|"bad", given }
-  let locked = ["", ""];    // angezeigte Antwort nach dem Prüfen
+  let locked = ["", ""];   // angezeigte Antwort nach dem Prüfen
   let phase = "ask";       // "ask" → bei falscher Antwort "fix" (richtiges Jahr eintippen) → "done"
   let finished = false;
 
-  const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   // Zwei Felder: "1814" oder "1814" – "1815" (auch "15" als Kurzform). Ergebnis z. B. "1814-1815"
   function readAnswer() {
     const a = input.value;
@@ -451,16 +1051,11 @@
     if (!b || b === a) return { value: a, shown: a };
     return { value: a + "-" + b, shown: a + "–" + input2.value };
   }
-
   function clearFields() {
     input.value = "";
     input2.value = "";
     input.focus();
   }
-
-
-  function gapYears(i) { return EVENTS[i + 1].start - EVENTS[i].end; }
-  function gapText(d) { return d === 0 ? "im selben Jahr" : d === 1 ? "1 Jahr später" : d + " Jahre später"; }
 
   function status(i) {
     if (results[i]) return results[i].status;
@@ -468,70 +1063,15 @@
     if (!finished && i === queue[pos]) return "current";
     return "pending";
   }
-  const isRevealed = (i) => ["ok", "bad", "known"].includes(status(i));
-
-  // ---------- Zeitstrahl ----------
-  function buildTimeline() {
-    const ol = $("timeline");
-    ol.innerHTML = "";
-    EVENTS.forEach((ev, i) => {
-      const li = document.createElement("li");
-      li.className = "node";
-      li.id = "node-" + i;
-      li.innerHTML =
-        '<div class="year' + (ev.display.length > 4 ? " long" : "") + '"></div>' +
-        '<div class="rail"><span class="dot"></span></div>' +
-        '<div class="info"><div class="title"></div><div class="meta"></div></div>';
-      li.querySelector(".title").textContent = ev.name;
-      ol.appendChild(li);
-
-      if (i < EVENTS.length - 1) {
-        const gap = document.createElement("li");
-        gap.className = "gap";
-        gap.id = "gap-" + i;
-        gap.setAttribute("aria-hidden", "true");
-        gap.innerHTML = '<div></div><div class="rail"></div><div><span class="pill"></span></div>';
-        gap.querySelector(".pill").textContent = "↓ " + gapText(gapYears(i));
-        ol.appendChild(gap);
-      }
+  function renderYears() {
+    renderTimeline(tlYears, status, (i, s) => {
+      if (s === "current") return "Jetzt gefragt";
+      if (s === "ok") return "✓ richtig";
+      if (s === "bad") return "✗ deine Antwort: <s>" + esc(results[i].given) + "</s>";
+      return "";
     });
   }
 
-  function renderTimeline() {
-    EVENTS.forEach((ev, i) => {
-      const s = status(i);
-      const node = $("node-" + i);
-      node.className = "node " + s;
-      node.querySelector(".year").textContent = (s === "pending" || s === "current") ? "?" : ev.display;
-      const meta = node.querySelector(".meta");
-      if (s === "current") meta.textContent = "Jetzt gefragt";
-      else if (s === "ok") meta.textContent = "✓ richtig";
-      else if (s === "bad") meta.innerHTML = "✗ deine Antwort: <s>" + esc(results[i].given) + "</s>";
-      else meta.textContent = "";
-
-      if (i < EVENTS.length - 1) {
-        const gap = $("gap-" + i);
-        const open = isRevealed(i) && isRevealed(i + 1);
-        gap.classList.toggle("revealed", open);
-        // Abstand wächst proportional zu den Jahren dazwischen
-        gap.style.setProperty("--h", open ? (40 + gapYears(i) * 14) + "px" : "34px");
-      }
-    });
-  }
-
-  function scrollToNode(i) {
-    const node = $("node-" + i);
-    if (!node) return;
-    // Auf dem Handy bleibt die Abfrage oben im Blick; der Zeitstrahl wird nicht hergescrollt
-    if (getComputedStyle($("panel")).position !== "sticky") return;
-    const narrow = window.matchMedia("(max-width: 899px)").matches;
-    const offset = narrow ? $("panel").offsetHeight + 110 : 140;
-    node.style.scrollMarginTop = offset + "px";
-    node.style.scrollMarginBottom = "120px";
-    node.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }
-
-  // ---------- Ablauf ----------
   function startRound(indices) {
     round++;
     queue = indices.slice(); // chronologische Reihenfolge
@@ -541,8 +1081,8 @@
     wrong = [];
     results = {};
     finished = false;
-    $("result").classList.add("hidden");
-    $("quiz").classList.remove("hidden");
+    $("yResult").classList.add("hidden");
+    $("yQuiz").classList.remove("hidden");
     showQuestion();
   }
 
@@ -565,9 +1105,9 @@
     feedback.className = "feedback";
     feedback.innerHTML = "";
     $("submitBtn").textContent = "Prüfen";
-    renderTimeline();
-    scrollToNode(i);
-    input.focus();
+    renderYears();
+    scrollToNode(tlYears, i, $("yPanel"));
+    if (view === "years") input.focus();
   }
 
   function check() {
@@ -593,7 +1133,7 @@
       (ok ? "" : '<div class="fix" id="fixText">Tippe die richtige Jahreszahl ein, um weiterzumachen.</div>');
 
     $("barFill").style.width = ((pos + 1) / queue.length * 100) + "%";
-    renderTimeline();
+    renderYears();
 
     if (ok) {
       finishQuestion();
@@ -639,9 +1179,9 @@
 
   function showResult() {
     finished = true;
-    renderTimeline();
-    $("quiz").classList.add("hidden");
-    $("result").classList.remove("hidden");
+    renderYears();
+    $("yQuiz").classList.add("hidden");
+    $("yResult").classList.remove("hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
     $("resultRound").textContent = "Ergebnis Runde " + round;
     $("scoreText").textContent = correct + " / " + queue.length;
@@ -663,9 +1203,8 @@
     else if (phase === "fix") checkFix();
     else next();
   });
-
+  // Tippen auf den Button nimmt dem Eingabefeld nicht den Fokus → Tastatur klappt nicht zu und wieder auf
   $("submitBtn").addEventListener("mousedown", (e) => e.preventDefault());
-
   $("fields").addEventListener("animationend", () => $("fields").classList.remove("shake"));
 
   // Nur Ziffern; nach 4 Ziffern springt der Cursor ins zweite Feld
@@ -686,18 +1225,318 @@
       input.value = input.value.slice(0, -1);
     }
   });
+  $("nextRoundBtn").addEventListener("click", () => startRound(wrong.length ? wrong : ALL));
+  $("restartBtn").addEventListener("click", () => { round = 0; startRound(ALL); });
 
-  $("nextRoundBtn").addEventListener("click", () => {
-    startRound(wrong.length ? wrong : ALL);
+  // ================================================================
+  //  WISSENS-QUIZ
+  // ================================================================
+  const tlQuiz = $("tlQuiz");
+  buildTimeline(tlQuiz, false);
+
+  let progress = store.get("vm-progress", {});   // Frage-id -> 1 (sicher) | 0 (zuletzt falsch)
+  const saved = store.get("vm-quiz-settings", {});
+  const settings = {
+    events: new Set(Array.isArray(saved.events) && saved.events.length ? saved.events : EVENTS.map((e) => e.id)),
+    order: saved.order === "mixed" ? "mixed" : "chrono",
+    size: [10, 20, 0].includes(saved.size) ? saved.size : 10,
+  };
+  const saveSettings = () => store.set("vm-quiz-settings", { events: [...settings.events], order: settings.order, size: settings.size });
+
+  let qRound = 0;
+  let qQueue = [];
+  let qPos = 0;
+  let qCorrect = 0;
+  let qWrong = [];
+  let qPhase = "ask";      // "ask" → ("reveal" bei Erklär-Karten) → "done"
+  let qFirst = true;       // noch kein Fehlversuch bei dieser Frage
+  let qRunning = false;
+
+  function renderQuizStart() {
+    $("qChips").innerHTML =
+      '<button data-ev="all" class="' + (settings.events.size === EVENTS.length ? "on" : "") + '">Alle</button>' +
+      EVENTS.map((e) => '<button data-ev="' + e.id + '" class="' + (settings.events.has(e.id) ? "on" : "") + '">' + esc(e.name) + "</button>").join("");
+    document.querySelectorAll("#qOrder button").forEach((b) => b.classList.toggle("on", b.dataset.v === settings.order));
+    document.querySelectorAll("#qSize button").forEach((b) => b.classList.toggle("on", +b.dataset.v === settings.size));
+    $("qStartBtn").disabled = settings.events.size === 0;
+    const known = QUESTIONS.filter((q) => progress[q.id] === 1).length;
+    $("qStats").innerHTML = "Du kannst " + known + " von " + QUESTIONS.length + " Fragen sicher." +
+      (known || Object.keys(progress).length ? ' · <button class="linkbtn" id="qReset">Zurücksetzen</button>' : "");
+  }
+  $("qChips").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.ev === "all") {
+      settings.events = settings.events.size === EVENTS.length ? new Set() : new Set(EVENTS.map((x) => x.id));
+    } else if (settings.events.has(b.dataset.ev)) {
+      settings.events.delete(b.dataset.ev);
+    } else {
+      settings.events.add(b.dataset.ev);
+    }
+    saveSettings();
+    renderQuizStart();
+  });
+  $("qOrder").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    settings.order = b.dataset.v;
+    saveSettings();
+    renderQuizStart();
+  });
+  $("qSize").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    settings.size = +b.dataset.v;
+    saveSettings();
+    renderQuizStart();
+  });
+  $("qStats").addEventListener("click", (e) => {
+    if (e.target.id !== "qReset") return;
+    if (!confirm("Fortschritt im Wissens-Quiz auf diesem Gerät zurücksetzen?")) return;
+    progress = {};
+    store.set("vm-progress", progress);
+    renderQuizStart();
   });
 
-  $("restartBtn").addEventListener("click", () => {
-    round = 0;
-    startRound(ALL);
+  function startQuizFromSettings() {
+    const order = (q) => EV_INDEX[q.ev] * 1000 + QUESTIONS.indexOf(q);
+    let pool = QUESTIONS.filter((q) => settings.events.has(q.ev));
+    // Unsichere und neue Fragen zuerst, bei Gleichstand zufällig
+    pool = shuffle(pool).sort((a, b) => (progress[a.id] === 1) - (progress[b.id] === 1));
+    if (settings.size) pool = pool.slice(0, settings.size);
+    pool = settings.order === "chrono" ? pool.sort((a, b) => order(a) - order(b)) : shuffle(pool);
+    qRound = 0;
+    startQuiz(pool);
+  }
+  // Aus dem Lernbereich: alle Fragen zu einem Ereignis, ohne die Quiz-Einstellungen zu ändern
+  function practiceEvent(i) {
+    showView("quiz");
+    qRound = 0;
+    startQuiz(QUESTIONS.filter((q) => q.ev === EVENTS[i].id));
+  }
+
+  function startQuiz(list) {
+    qRound++;
+    qQueue = list;
+    qPos = 0;
+    qCorrect = 0;
+    qWrong = [];
+    qRunning = true;
+    $("qStart").classList.add("hidden");
+    $("qResult").classList.add("hidden");
+    $("qRun").classList.remove("hidden");
+    window.scrollTo({ top: 0 });
+    showQ();
+  }
+
+  const curQ = () => qQueue[qPos];
+
+  function renderQuizTimeline() {
+    const q = qRunning ? curQ() : null;
+    const focus = q && (q.type !== "event" || qPhase === "done") ? EV_INDEX[q.ev] : -1;
+    renderTimeline(tlQuiz, (i) => (i === focus ? "focus" : "known"));
+    if (focus >= 0) scrollToNode(tlQuiz, focus, $("qPanel"));
+  }
+
+  function showQ() {
+    const q = curQ();
+    const ev = EVENTS[EV_INDEX[q.ev]];
+    qPhase = "ask";
+    qFirst = true;
+
+    $("qRoundLabel").textContent = "Runde " + qRound;
+    $("qCount").textContent = (qPos + 1) + " / " + qQueue.length;
+    $("qBar").style.width = (qPos / qQueue.length * 100) + "%";
+    $("qChip").textContent = q.type === "event" ? "Ereignis zuordnen" : ev.name + " · " + ev.display;
+    $("qPrompt").textContent = q.q;
+
+    let options = [];
+    if (q.type === "mc") options = shuffle([{ label: q.a, c: true }, ...q.o.map((o) => ({ label: o, c: false }))]);
+    if (q.type === "multi") options = shuffle([...q.a.map((a) => ({ label: a, c: true })), ...q.o.map((o) => ({ label: o, c: false }))]);
+    if (q.type === "event") options = EVENTS.map((e) => ({ label: e.name, sub: e.display, c: e.id === q.a }));
+
+    const opts = $("qOpts");
+    opts.className = "opts" + (q.type === "event" ? " events" : "");
+    opts.innerHTML = options.map((o, n) =>
+      '<button class="opt" data-c="' + (o.c ? 1 : 0) + '">' +
+      (q.type === "multi" ? '<span class="box">✓</span>' : '<span class="k">' + (n + 1) + "</span>") +
+      '<span class="ol">' + esc(o.label) + (o.sub ? "<small>" + esc(o.sub) + "</small>" : "") + "</span></button>"
+    ).join("");
+
+    $("qAnswer").classList.add("hidden");
+    $("qSelf").classList.add("hidden");
+    $("qFeedback").className = "feedback";
+    $("qFeedback").innerHTML = "";
+
+    const primary = $("qPrimary");
+    primary.disabled = false;
+    if (q.type === "multi") { primary.textContent = "Prüfen"; primary.parentElement.classList.remove("hidden"); }
+    else if (q.type === "card") { primary.textContent = "Antwort aufdecken"; primary.parentElement.classList.remove("hidden"); }
+    else primary.parentElement.classList.add("hidden");
+
+    renderQuizTimeline();
+  }
+
+  function markWrong(q) {
+    if (!qWrong.includes(q)) qWrong.push(q);
+    progress[q.id] = 0;
+    store.set("vm-progress", progress);
+  }
+  function markRight(q) {
+    qCorrect++;
+    progress[q.id] = 1;
+    store.set("vm-progress", progress);
+  }
+
+  function showNote(ok, headline) {
+    const q = curQ();
+    $("qFeedback").className = "feedback " + (ok ? "ok" : "bad");
+    $("qFeedback").innerHTML = '<div class="main">' + headline + "</div>" +
+      (q.note ? '<div class="note">' + esc(q.note) + "</div>" : "");
+  }
+
+  function finishQ() {
+    qPhase = "done";
+    $("qOpts").querySelectorAll(".opt").forEach((b) => {
+      b.disabled = true;
+      if (!b.matches(".ok, .bad, .missed")) b.classList.add("dim");
+    });
+    const primary = $("qPrimary");
+    primary.textContent = qPos + 1 < qQueue.length ? "Weiter" : "Ergebnis";
+    primary.parentElement.classList.remove("hidden");
+    $("qBar").style.width = ((qPos + 1) / qQueue.length * 100) + "%";
+    renderQuizTimeline();
+  }
+
+  // Antwort antippen
+  $("qOpts").addEventListener("click", (e) => {
+    const b = e.target.closest(".opt");
+    if (!b || qPhase === "done" || b.disabled) return;
+    const q = curQ();
+    if (q.type === "multi") {
+      b.classList.toggle("sel");
+      return;
+    }
+    if (b.dataset.c === "1") {
+      b.classList.add("ok");
+      if (qFirst) {
+        markRight(q);
+        showNote(true, "✓ Richtig!");
+      } else {
+        showNote(true, "✓ Jetzt stimmt's. Die Frage kommt in der nächsten Runde wieder.");
+      }
+      finishQ();
+    } else {
+      // Falsch: Antwort sperren, nochmal versuchen – zählt als Fehler
+      b.classList.add("bad");
+      b.disabled = true;
+      if (qFirst) { qFirst = false; markWrong(q); }
+      $("qFeedback").className = "feedback bad";
+      $("qFeedback").innerHTML = '<div class="main">✗ Leider falsch – versuch es nochmal.</div>';
+    }
   });
 
-  buildTimeline();
+  function checkMulti() {
+    const q = curQ();
+    const btns = [...$("qOpts").querySelectorAll(".opt")];
+    if (!btns.some((b) => b.classList.contains("sel"))) return;
+    let allRight = true;
+    btns.forEach((b) => {
+      const c = b.dataset.c === "1";
+      const sel = b.classList.contains("sel");
+      b.classList.remove("sel");
+      if (sel) b.classList.add("picked");
+      if (c && sel) b.classList.add("ok");
+      else if (c && !sel) { b.classList.add("missed"); allRight = false; }
+      else if (!c && sel) { b.classList.add("bad"); allRight = false; }
+    });
+    if (allRight) { markRight(q); showNote(true, "✓ Alles richtig!"); }
+    else { markWrong(q); showNote(false, "✗ Nicht ganz. Rot war falsch, gestrichelt hat gefehlt."); }
+    finishQ();
+  }
+
+  function revealCard() {
+    qPhase = "reveal";
+    const q = curQ();
+    $("qAnswer").innerHTML = '<div class="label">Antwort</div>' + esc(q.a);
+    $("qAnswer").classList.remove("hidden");
+    $("qSelf").classList.remove("hidden");
+    $("qPrimary").parentElement.classList.add("hidden");
+  }
+  function rateCard(knew) {
+    if (qPhase !== "reveal") return;
+    if (knew) markRight(curQ()); else markWrong(curQ());
+    nextQ();
+  }
+  $("qYes").addEventListener("click", () => rateCard(true));
+  $("qNo").addEventListener("click", () => rateCard(false));
+
+  $("qPrimary").addEventListener("click", () => {
+    const q = curQ();
+    if (qPhase === "done") nextQ();
+    else if (q.type === "multi") checkMulti();
+    else if (q.type === "card" && qPhase === "ask") revealCard();
+  });
+
+  function nextQ() {
+    qPos++;
+    if (qPos < qQueue.length) showQ();
+    else showQuizResult();
+  }
+
+  function showQuizResult() {
+    qRunning = false;
+    $("qRun").classList.add("hidden");
+    $("qResult").classList.remove("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    $("qResRound").textContent = "Ergebnis Runde " + qRound;
+    $("qScore").textContent = qCorrect + " / " + qQueue.length;
+    $("qSub").textContent = qWrong.length === 0
+      ? "Alles richtig – sehr gut!"
+      : qWrong.length + (qWrong.length === 1 ? " Frage kommt" : " Fragen kommen") + " in der nächsten Runde wieder.";
+    $("qAgain").textContent = qWrong.length ? "Falsche wiederholen (" + qWrong.length + ")" : "Nächste Runde";
+    renderQuizTimeline();
+  }
+  $("qAgain").addEventListener("click", () => {
+    if (qWrong.length) startQuiz(qQueue.filter((q) => qWrong.includes(q)));
+    else startQuizFromSettings();
+  });
+  $("qNew").addEventListener("click", () => {
+    $("qResult").classList.add("hidden");
+    $("qStart").classList.remove("hidden");
+    renderQuizStart();
+  });
+  $("qStartBtn").addEventListener("click", startQuizFromSettings);
+  $("qQuit").addEventListener("click", () => {
+    qRunning = false;
+    $("qRun").classList.add("hidden");
+    $("qStart").classList.remove("hidden");
+    renderQuizStart();
+    renderQuizTimeline();
+  });
+
+  // Tastatur am Mac: 1–9 wählt eine Antwort, Enter = Prüfen / Weiter / Aufdecken
+  document.addEventListener("keydown", (e) => {
+    if (view !== "quiz" || !qRunning || e.metaKey || e.ctrlKey || e.altKey) return;
+    const q = curQ();
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (!$("qPrimary").parentElement.classList.contains("hidden")) $("qPrimary").click();
+      return;
+    }
+    const n = parseInt(e.key, 10);
+    if (!n) return;
+    if (qPhase === "reveal") { if (n === 1) rateCard(true); if (n === 2) rateCard(false); return; }
+    const b = $("qOpts").querySelectorAll(".opt")[n - 1];
+    if (b) b.click();
+  });
+
+  // ================================================================
+  //  Start
+  // ================================================================
   startRound(ALL);
+  const startView = store.get("vm-view", "learn");
+  showView(["learn", "years", "quiz"].includes(startView) ? startView : "learn");
 </script>
 </body>
 </html>
