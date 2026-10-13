@@ -52,6 +52,7 @@
     max-width: 1080px;
     margin: 0 auto;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 28px;
   }
   header h1 {
@@ -114,15 +115,18 @@
   }
   .prev b { color: var(--text); font-family: var(--rounded); font-variant-numeric: tabular-nums; }
   form { display: flex; gap: 10px; }
+  .fields { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+  .dash { color: var(--muted); font-size: 1.4em; font-weight: 600; }
   input {
     flex: 1;
     min-width: 0;
+    text-align: center;
     font: inherit;
     font-family: var(--rounded);
     font-size: 1.5em;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    padding: 10px 16px;
+    padding: 10px 8px;
     border: 2px solid var(--line);
     border-radius: 14px;
     background: var(--bg);
@@ -156,7 +160,8 @@
   .feedback .main { font-weight: 600; }
   .feedback .main b { font-family: var(--rounded); font-size: 1.15em; }
   .feedback .rel { color: var(--text); opacity: .75; font-size: 0.85em; margin-top: 2px; }
-  input.shake { animation: shake .35s; border-color: var(--bad); }
+  .fields.shake { animation: shake .35s; }
+  .fields.shake input { border-color: var(--bad); }
   @keyframes shake {
     0%, 100% { transform: none; }
     25% { transform: translateX(-6px); }
@@ -313,6 +318,8 @@
   }
   @media (max-width: 480px) {
     body { font-size: 17px; }
+    form { flex-wrap: wrap; }
+    form button { width: 100%; }
     .timeline { --yearw: 4.6em; --railw: 28px; }
     .timeline li { column-gap: 6px; }
   }
@@ -336,8 +343,13 @@
       <div class="prev" id="prevText"></div>
 
       <form id="answerForm" autocomplete="off">
-        <input id="answer" type="text" inputmode="numeric" enterkeyhint="go"
-               placeholder="Jahr" aria-label="Jahreszahl" autocorrect="off" spellcheck="false">
+        <div class="fields" id="fields">
+          <input id="answer" type="text" inputmode="numeric" pattern="[0-9]*" size="4" maxlength="4" enterkeyhint="go"
+                 placeholder="Jahr" aria-label="Jahr" autocorrect="off" spellcheck="false">
+          <span class="dash" aria-hidden="true">–</span>
+          <input id="answer2" type="text" inputmode="numeric" pattern="[0-9]*" size="4" maxlength="4" enterkeyhint="go"
+                 placeholder="bis" aria-label="bis Jahr (nur bei Zeiträumen)" autocorrect="off" spellcheck="false">
+        </div>
         <button type="submit" id="submitBtn">Prüfen</button>
       </form>
 
@@ -365,7 +377,7 @@
   // display: angezeigte Lösung, accept: akzeptierte Antworten
   const EVENTS = [
     { name: "Völkerschlacht bei Leipzig",    start: 1813, end: 1813, display: "1813",    accept: ["1813"] },
-    { name: "Wiener Kongress",               start: 1814, end: 1815, display: "1814/15", accept: ["1814", "1815", "1814/15", "1814-15", "1814/1815", "1814-1815"] },
+    { name: "Wiener Kongress",               start: 1814, end: 1815, display: "1814/15", accept: ["1814", "1815", "1814-1815"] },
     { name: "Deutsche Bundesakte",           start: 1815, end: 1815, display: "1815",    accept: ["1815"] },
     { name: "Wartburgfest",                  start: 1817, end: 1817, display: "1817",    accept: ["1817"] },
     { name: "Ermordung Kotzebues",           start: 1819, end: 1819, display: "1819",    accept: ["1819"] },
@@ -377,6 +389,7 @@
 
   const $ = (id) => document.getElementById(id);
   const input = $("answer");
+  const input2 = $("answer2");
   const feedback = $("feedback");
 
   let round = 0;
@@ -390,7 +403,25 @@
   let finished = false;
 
   const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const normalize = (s) => s.trim().replace(/[–—]/g, "-").replace(/\s+/g, "");
+  // Zwei Felder: "1814" oder "1814" – "1815" (auch "15" als Kurzform). Ergebnis z. B. "1814-1815"
+  function readAnswer() {
+    const a = input.value;
+    let b = input2.value;
+    if (!a) return { value: "", shown: "" };
+    if (b.length === 2) b = a.slice(0, 2) + b;
+    if (!b || b === a) return { value: a, shown: a };
+    return { value: a + "-" + b, shown: a + "–" + input2.value };
+  }
+
+  function clearFields() {
+    input.value = "";
+    input2.value = "";
+    input.focus();
+  }
+  function setReadOnly(on) {
+    input.readOnly = on;
+    input2.readOnly = on;
+  }
 
   function gapYears(i) { return EVENTS[i + 1].start - EVENTS[i].end; }
   function gapText(d) { return d === 0 ? "im selben Jahr" : d === 1 ? "1 Jahr später" : d + " Jahre später"; }
@@ -488,9 +519,11 @@
     $("prevText").innerHTML = i > 0
       ? "Davor: " + esc(EVENTS[i - 1].name) + " · <b>" + EVENTS[i - 1].display + "</b>"
       : "Das erste Ereignis auf dem Zeitstrahl";
-    input.value = "";
-    input.readOnly = false;
+    setReadOnly(false);
     input.placeholder = "Jahr";
+    input2.placeholder = "bis";
+    input.value = "";
+    input2.value = "";
     feedback.className = "feedback";
     feedback.innerHTML = "";
     $("submitBtn").textContent = "Prüfen";
@@ -501,12 +534,12 @@
   }
 
   function check() {
-    const value = normalize(input.value);
+    const { value, shown } = readAnswer();
     if (!value) { input.focus(); return; }
     const i = queue[pos];
     const ev = EVENTS[i];
     const ok = ev.accept.includes(value);
-    results[i] = { status: ok ? "ok" : "bad", given: input.value.trim() };
+    results[i] = { status: ok ? "ok" : "bad", given: shown };
     if (ok) correct++; else wrong.push(i);
 
     let rel = "";
@@ -530,8 +563,10 @@
     } else {
       // Erst weiter, wenn die richtige Jahreszahl einmal selbst eingetippt wurde
       phase = "fix";
+      input.placeholder = String(ev.start);
+      input2.placeholder = ev.end !== ev.start ? String(ev.end) : "bis";
       input.value = "";
-      input.placeholder = ev.display;
+      input2.value = "";
       $("submitBtn").textContent = "Bestätigen";
       $("hint").textContent = "Richtige Jahreszahl eintippen und mit Enter bestätigen";
       input.focus();
@@ -540,11 +575,12 @@
 
   function checkFix() {
     const ev = EVENTS[queue[pos]];
-    if (!ev.accept.includes(normalize(input.value))) {
-      input.classList.remove("shake");
-      void input.offsetWidth; // Animation neu starten
-      input.classList.add("shake");
-      input.select();
+    if (!ev.accept.includes(readAnswer().value)) {
+      const f = $("fields");
+      f.classList.remove("shake");
+      void f.offsetWidth; // Animation neu starten
+      f.classList.add("shake");
+      clearFields();
       return;
     }
     const fix = $("fixText");
@@ -555,7 +591,7 @@
 
   function finishQuestion() {
     phase = "done";
-    input.readOnly = true;
+    setReadOnly(true);
     $("submitBtn").textContent = pos + 1 < queue.length ? "Weiter" : "Ergebnis";
     $("hint").textContent = "Enter für weiter";
   }
@@ -592,7 +628,24 @@
     else next();
   });
 
-  input.addEventListener("animationend", () => input.classList.remove("shake"));
+  $("fields").addEventListener("animationend", () => $("fields").classList.remove("shake"));
+
+  // Nur Ziffern; nach 4 Ziffern springt der Cursor ins zweite Feld
+  input.addEventListener("input", () => {
+    input.value = input.value.replace(/\D/g, "").slice(0, 4);
+    if (input.value.length === 4 && !input.readOnly) input2.focus();
+  });
+  input2.addEventListener("input", () => {
+    input2.value = input2.value.replace(/\D/g, "").slice(0, 4);
+  });
+  // Rücktaste im leeren zweiten Feld springt zurück ins erste
+  input2.addEventListener("keydown", (e) => {
+    if (e.key === "Backspace" && input2.value === "" && !input2.readOnly) {
+      e.preventDefault();
+      input.focus();
+      input.value = input.value.slice(0, -1);
+    }
+  });
 
   $("nextRoundBtn").addEventListener("click", () => {
     startRound(wrong.length ? wrong : ALL);
